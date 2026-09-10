@@ -5,3 +5,4 @@
 | # | Status | Title | Scope | Summary | Revisit |
 |---|--------|-------|-------|---------|---------|
 | [001](001-generate-projects-using-wxt-and-pnpm.md) | Accepted | Generate Projects Using WXT + pnpm Instead of Raw Manifest/web-ext | {{ cookiecutter.github_project_name }}/package.json, {{ cookiecutter.github_project_name }}/wxt.config.ts | Generate browser-extension projects using WXT (a Vite-based cross-browser WebExtension framework) and pnpm, instead of a hand-maintained manifest.json plus web-ext. |  |
+| [002](002-single-pinned-node-version.md) | Accepted | Support a Single Pinned Node Version, Not a Matrix | {{ cookiecutter.github_project_name }}/.github/workflows/build.yml | CI runs a single pinned Node LTS version, not a support matrix — Node is this project's build tooling, not the runtime the shipped extension runs under. |  |
