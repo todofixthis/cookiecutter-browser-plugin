@@ -5,8 +5,6 @@ describe('popup', () => {
     document.body.innerHTML = '<div id="app"></div>';
     await import('../../entrypoints/popup/main');
     const app = document.querySelector('#app');
-    expect(app?.textContent).toBe(
-      'Hello from {{ cookiecutter.project_name }}!',
-    );
+    expect(app?.textContent).toBe('Hello from {{ cookiecutter.project_name }}!');
   });
 });

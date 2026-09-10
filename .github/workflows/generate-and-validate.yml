@@ -1,0 +1,62 @@
+# Bakes a real project from this template with cookiecutter and validates the
+# result the same way a maintainer of a generated project would: lint,
+# type-check, test, build both targets, e2e-test the Chromium build, and
+# build its docs.
+name: Generate and Validate
+
+on:
+  push: ~
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: "pyproject.toml"
+      - name: Set up pnpm
+        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          # No `cache: pnpm` here — the project this job bakes doesn't exist
+          # yet at this point in the job, so there's no pnpm-lock.yaml for
+          # actions/setup-node to key a cache off (unlike build.yml's jobs,
+          # which cache against the templated project's own committed
+          # lockfile).
+      - name: Bake a project with default answers
+        run: uvx "cookiecutter>=2,<3" . --no-input --output-dir /tmp/baked
+      - name: Install the generated project's dependencies
+        run: pnpm install
+        working-directory: /tmp/baked/my-browser-plugin
+      - name: Lint the generated project
+        run: pnpm lint
+        working-directory: /tmp/baked/my-browser-plugin
+      - name: Type-check the generated project
+        run: pnpm typecheck
+        working-directory: /tmp/baked/my-browser-plugin
+      - name: Test the generated project
+        run: pnpm test
+        working-directory: /tmp/baked/my-browser-plugin
+      - name: Build the generated project (both targets)
+        run: pnpm build && pnpm build:firefox
+        working-directory: /tmp/baked/my-browser-plugin
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: /tmp/baked/my-browser-plugin
+      - name: e2e-test the generated project
+        run: pnpm test:e2e
+        working-directory: /tmp/baked/my-browser-plugin
+      - name: Build the generated project's docs
+        run: pnpm typedoc
+        working-directory: /tmp/baked/my-browser-plugin
