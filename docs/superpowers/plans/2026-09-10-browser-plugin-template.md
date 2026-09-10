@@ -614,7 +614,7 @@ Run `git status` to catch any related unstaged or untracked files (e.g. `uv.lock
 
 - [ ] **Step 1: Write ADR 001**
 
-```markdown
+````markdown
 ---
 status: Accepted
 date: 2026-09-10
@@ -685,12 +685,7 @@ version.
   `required: ["none"]` since it collects nothing.
 - Contributors need `wxt prepare` (wired as `package.json`'s
   `postinstall`) before `tsc` can resolve WXT's generated types.
-```
-
-- [ ] **Step 2: Regenerate the ADR index**
-
-Run: `uv run python -m scripts.adr.generate_index`
-Expected: `Generated docs/adr/INDEX.md (1 entries)`, creating `docs/adr/INDEX.md`.
+````
 
 - [ ] **Step 3: Write `cookiecutter.json`**
 
@@ -1047,7 +1042,7 @@ coverage/
 Needed by the `release` skill (Step 18, below), which links breaking-change
 migration guides from this file's upgrade-alert listing.
 
-```markdown
+````markdown
 [![CI](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_project_name }}/actions/workflows/build.yml/badge.svg)](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_project_name }}/actions/workflows/build.yml)
 [![Docs](https://readthedocs.org/projects/{{ cookiecutter.package_name }}/badge/?version=latest)](https://{{ cookiecutter.package_name }}.readthedocs.io/)
 
@@ -1095,11 +1090,11 @@ See the `release` agent skill (`.agents/skills/release/SKILL.md`) for the
 full process — version bump, packaging for both browsers, GPG-signed
 artefacts, and GitHub release creation. Store submission (AMO, Chrome Web
 Store) is a manual, developer-run step.
-```
+````
 
 - [ ] **Step 14: Write `{{ cookiecutter.github_project_name }}/AGENTS.md`**
 
-```markdown
+````markdown
 ## Getting Started
 
 Before writing code, check:
@@ -1131,7 +1126,7 @@ pnpm typedoc                 # build API docs (TypeDoc) into docs/_build/html
 
 - `entrypoints/` — WXT convention: one file/folder per extension entrypoint (`background.ts`, `popup/`). WXT compiles this into a manifest per build target (`wxt build -b chrome|firefox`); there's no hand-maintained `manifest.json`.
 - `test/unit/` — Vitest, using `wxt/testing/vitest-plugin` to resolve WXT's virtual imports and mock `browser.*`.
-- `test/e2e/` — Playwright, loading the *built* Chromium extension via a persistent browser context.
+- `test/e2e/` — Playwright, loading the _built_ Chromium extension via a persistent browser context.
 - `docs/` — TypeDoc output and config; hosted on ReadTheDocs.
 
 ## Docstrings
@@ -1166,7 +1161,7 @@ Place comments on the line preceding the code they document, not as trailing com
 ## Git Worktrees
 
 Use the `using-git-worktrees` skill; it creates worktrees via the native `EnterWorktree` tool under `.claude/worktrees/` (gitignored). Don't hand-roll `git worktree add` when the native tool is available. Keep `.claude/` a real directory (only `.claude/skills` is a symlink into `.agents/skills`) — the native tool refuses to run if `.claude` itself is a symlink.
-```
+````
 
 - [ ] **Step 15: Symlink `{{ cookiecutter.github_project_name }}/CLAUDE.md` to `AGENTS.md`**
 
@@ -1198,51 +1193,61 @@ Run: `mkdir -p "{{ cookiecutter.github_project_name }}/.agents/skills"` then `ln
 
 `{{ cookiecutter.github_project_name }}/.agents/skills/release/SKILL.md`:
 
-```markdown
+`````markdown
 ---
 name: release
 description: Use when preparing or publishing a new release of {{ cookiecutter.project_name }} — covers release notes, version bump, build, packaging for both browsers, GPG-signed artefacts, and GitHub release creation
 ---
+
 # Release
 
 ## Phase 1 — Research & draft (before touching any files)
 
 ### 1. Gather changes since last release
+
 ```bash
 gh release list --limit 1 --json tagName --jq '.[0].tagName'   # find last release tag
 git log <last-tag>..HEAD --oneline                              # all commits since
 ```
 
 ### 2. Look up PR and issue context
+
 For every merge commit, extract the PR number and fetch its description:
+
 ```bash
 git log <last-tag>..HEAD --oneline --merges
 gh pr view <number> --json title,body,labels
 ```
 
 For every `#<number>` reference in commit messages, fetch the issue:
+
 ```bash
 gh issue view <number> --json title,body,labels
 ```
 
 ### 3. Draft release notes
+
 Using the commit list, PR descriptions, and issue context, draft the release notes following the _Writing Release Notes_ guide below. When a bullet relates to a GitHub issue, prefix it with `[#number]`. Run the `nz-english` skill on the draft, then present it to the developer for review and incorporate feedback before proceeding.
 
 ### 4. Recommend version number
+
 Based on the changes, recommend a semver bump:
+
 - **major** — breaking changes
 - **minor** — new features or behaviour changes, fully backwards-compatible
 - **patch** — bug fixes only
 
 ### 5. Gate: breaking changes require a migration guide
+
 A **breaking change** is anything that makes previously-working code fail — at runtime, or under the type checker. Undocumented behaviour someone relied on still counts; "only a couple of users" measures blast radius, not compatibility. If this release has none, skip to the stop below.
 
-**First, settle the version.** Step 4 defines minor and patch as *fully backwards-compatible*, so a breaking change in anything but a major contradicts it. When that happens, stop and put it to the developer: bump to major, or keep the smaller bump and record why in an ADR. Neither pick it for them nor draft around it.
+**First, settle the version.** Step 4 defines minor and patch as _fully backwards-compatible_, so a breaking change in anything but a major contradicts it. When that happens, stop and put it to the developer: bump to major, or keep the smaller bump and record why in an ADR. Neither pick it for them nor draft around it.
 
 **Then the guide.** One guide per major line, `docs/upgrading_to_v<major>.md` — never a per-minor page. `<major>` is the major being released, or, for a break shipped in a minor or patch, the major line it lands on.
 
 It must:
-- **cover *this* release's breaking change.** A guide left over from an earlier release satisfies nothing.
+
+- **cover _this_ release's breaking change.** A guide left over from an earlier release satisfies nothing.
 - exist, and be linked from the upgrade-alert listing in `README.md` (this project's TypeDoc-generated docs site is API-only — it has no toctree/prose-page equivalent — so the guide lives in the repo and is reached via README, not via the docs site).
 - follow _Writing a Migration Guide_ below.
 
@@ -1254,6 +1259,7 @@ Release notes do not satisfy this gate. They are read once, by people who alread
 ls docs/upgrading_to_v<major>.md                    # exists
 rg 'upgrading_to_v<major>' README.md                # linked from the alert listing
 ```
+
 Then read the guide and confirm it covers this release's break. No command checks that for you.
 
 **Stop here. Get explicit confirmation of the release notes and version number before continuing.**
@@ -1263,28 +1269,34 @@ Then read the guide and confirm it covers this release's break. No command check
 ## Phase 2 — Publish (after confirmation)
 
 ### 6. Bump version on `develop`
+
 Edit `version` in `package.json` — WXT reads the manifest version from it,
 so no separate manifest edit is needed. Commit the file and push to
 `develop`.
 
 ### 7. Open release PR
+
 ```bash
 gh pr create --base main --title "Release v<version>" --body-file release-<version>.md
 ```
+
 **Stop here. Wait for the user to confirm the PR is merged before continuing.**
 
 ### 8. Switch to `main`
+
 ```bash
 git checkout main && git pull
 ```
 
 ### 9. Build and package both targets
+
 ```bash
 pnpm install --frozen-lockfile
 rm -rf .output
 pnpm build && pnpm build:firefox
 pnpm zip && pnpm zip:firefox
 ```
+
 Sync first — pulling `main` may have brought in dependency changes.
 Artefacts land in `.output/*.zip` — `pnpm zip:firefox` also emits a
 `*-sources.zip` (AMO's required source bundle for a minified build); it's
@@ -1294,20 +1306,24 @@ safe — and necessary: a stale build from a
 previous version would otherwise sit alongside the new one.
 
 ### 10. Tag and push
+
 ```bash
 git tag -a <version> -m "Release <version>"
 git push origin <version>
 ```
+
 `<version>` must match `package.json`'s `version` field.
 
 ### 11. Create GitHub release
 
 **a. Append checksums to the release notes file:**
+
 ```bash
 shasum -a 256 .output/*.zip >> release-<version>.md
 ```
 
 **b. GPG-sign the document and each build artefact:**
+
 ```bash
 GPG_KEY=$(git config user.email)
 gpg --local-user "$GPG_KEY" --clearsign release-<version>.md   # → release-<version>.md.asc
@@ -1315,18 +1331,21 @@ for f in .output/*.zip; do gpg --local-user "$GPG_KEY" --detach-sign "$f"; done
 ```
 
 **c. Build the release body** — concatenate the notes and the signed copy:
-```
+
+````
 <contents of release-<version>.md>
 
 ---
 
-````
-<contents of release-<version>.md.asc>
-````
 ```
+<contents of release-<version>.md.asc>
+```
+````
+
 Write this to `release-<version>-body.md`.
 
 **d. Create the release and upload all artefacts:**
+
 ```bash
 gh release create <version> .output/*.zip .output/*.sig \
   --title "{{ cookiecutter.project_name }} v<version>" \
@@ -1347,24 +1366,30 @@ assuming it's available.
 **Stop here. Wait for the developer to confirm both submissions (or explicitly defer them) before continuing.**
 
 ### 13. Clean up
+
 ```bash
 rm -f release-<version>.md release-<version>.md.asc release-<version>-body.md
 rm -rf .output
 git checkout develop && git pull
 ```
+
 `-f` so a re-run does not fail on a file already removed.
 
 ### 14. Close related GitHub issues
+
 For every issue referenced in the release notes, close it with a comment:
+
 ```bash
 gh issue close <number> --comment "Implemented in [v<version>](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_project_name }}/releases/tag/<version>)."
 ```
 
 ### 15. Rebase `develop` onto `main`
+
 ```bash
 git rebase origin/main
 git push
 ```
+
 Because `develop` now contains all of `main`'s commits, the histories no longer diverge and a regular (non-force) push succeeds.
 
 ---
@@ -1372,12 +1397,15 @@ Because `develop` now contains all of `main`'s commits, the histories no longer 
 ## Writing Release Notes
 
 ### Structure
+
 ```markdown
 # {{ cookiecutter.project_name }} v<version>
+
 <one-sentence summary of the release character>
 
 > [!WARNING]
 > **Breaking changes**
+>
 > - {what changed}
 >   - {migration instructions}
 >   - {error you'll see if you don't migrate}
@@ -1385,11 +1413,14 @@ Because `develop` now contains all of `main`'s commits, the histories no longer 
 > Full migration guide: [Upgrading to {{ cookiecutter.project_name }} v{major}](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_project_name }}/blob/main/docs/upgrading_to_v{major}.md)
 
 ## New features
+
 ## Enhancements
+
 ## Bug fixes
 
 > [!NOTE]
 > **Verifying release artefacts**
+>
 > 1. Import the signing key: `curl https://github.com/{{ cookiecutter.github_username }}.gpg | gpg --import`
 > 2. Download the `.zip` and its matching `.sig` file from the release assets
 > 3. Verify: `gpg --verify <name>-<version>-chrome.zip.sig <name>-<version>-chrome.zip`
@@ -1402,18 +1433,21 @@ Because `develop` now contains all of `main`'s commits, the histories no longer 
 Only include the `[!WARNING]` block if there are breaking changes — but when it is present, the migration guide link is **required**, not optional. Omit any section that has no entries.
 
 ### Grouping related items
+
 - **2–4 related bullets:** nest as a hierarchical sublist under the parent bullet
 - **5+ related bullets:** promote to a `###` subheading within the section
 
 ### Content filter
 
 **Always include**
+
 - New capabilities developers can use
 - Architectural decisions
 - Behaviour changes
 - Breaking changes
 
 **Usually omit**
+
 - Technical details of how something works internally
 - Configuration consolidation (unless it changes developer-facing behaviour)
 - Code organisation changes
@@ -1421,6 +1455,7 @@ Only include the `[!WARNING]` block if there are breaking changes — but when i
 - Improvements to coding agent instructions
 
 **Always omit**
+
 - Formatting, linting, minor refactoring
 - Test coverage updates
 
@@ -1457,13 +1492,13 @@ Dispatch one subagent on the main model (a reasoning task, not a cheap one), giv
 ### Conciseness pass
 
 Tighten the reviewed draft: cut repetition, merge overlapping fixes, drop hedging and prose that restates a code sample. Never trim two things for length: **verbatim error text and code fixes** — readers match on them — and any **migration step**. Then, since this project uses NZ English, run `phx:nz-english` over the result.
-```
+`````
 
 - [ ] **Step 19: Write the `rotate-node-version` skill**
 
 `{{ cookiecutter.github_project_name }}/.agents/skills/rotate-node-version/SKILL.md`:
 
-```markdown
+````markdown
 ---
 name: rotate-node-version
 description: Use when bumping the minimum supported Node version — updating package.json's engines field, CI's node-version, and docs.
@@ -1482,17 +1517,19 @@ Update the pinned Node floor consistently when bumping it.
 ## After editing
 
 Search for stray references:
+
 ```bash
 rg '"node": ">=' --glob "package.json"
 rg "node-version|nodejs:" --glob "*.yml" --glob "*.yaml"
 ```
 
 Then verify everything still passes:
+
 ```bash
 pnpm install
 pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm build:firefox
 ```
-```
+````
 
 - [ ] **Step 19a: Install JS dependencies and commit the lockfile**
 
@@ -1625,6 +1662,15 @@ Expected: `All checks passed!`
 Run: `uv run mypy hooks scripts test`
 Expected: `Success: no issues found`.
 
+- [ ] **Step 22a: Regenerate the ADR index**
+
+Run: `uv run python -m scripts.adr.generate_index`
+Expected: `Generated docs/adr/INDEX.md (1 entries)`, creating
+`docs/adr/INDEX.md`. Run only now, not right after Step 1 — ADR 001's
+`scope` names `package.json` and `wxt.config.ts`, which weren't written
+until Steps 6–7; the ADR index generator hard-errors on a scope entry
+that doesn't exist on disk yet.
+
 - [ ] **Step 23: Commit**
 
 Run `git status` to catch any related unstaged or untracked files, then use the `creative-commits` skill.
@@ -1724,11 +1770,11 @@ Run `git status` to catch any related unstaged or untracked files, then use the 
 
 - [ ] **Step 1: Write ADR 002**
 
-```markdown
+````markdown
 ---
 status: Accepted
 date: 2026-09-10
-scope: ["{{ cookiecutter.github_project_name }}/.github/workflows/build.yml", "{{ cookiecutter.github_project_name }}/.readthedocs.yaml"]
+scope: ["{{ cookiecutter.github_project_name }}/.github/workflows/build.yml"]
 summary: CI runs a single pinned Node LTS version, not a support matrix — Node is this project's build tooling, not the runtime the shipped extension runs under.
 ---
 
@@ -1760,14 +1806,9 @@ Pin a single Node version (`cookiecutter.node_version`, templated into
   is advisory (npm/pnpm warn, don't block) unless `engine-strict` is set,
   which this template doesn't set — matching how cookiecutter-py doesn't
   hard-block an out-of-range local Python either.
-```
+````
 
-- [ ] **Step 2: Regenerate the ADR index**
-
-Run: `uv run python -m scripts.adr.generate_index`
-Expected: `Generated docs/adr/INDEX.md (2 entries)`.
-
-- [ ] **Step 3: Write `{{ cookiecutter.github_project_name }}/.github/workflows/build.yml`**
+- [ ] **Step 2: Write `{{ cookiecutter.github_project_name }}/.github/workflows/build.yml`**
 
 ```yaml
 # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
@@ -1790,7 +1831,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "{{ cookiecutter.node_version }}"
+          node-version: '{{ cookiecutter.node_version }}'
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -1807,7 +1848,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "{{ cookiecutter.node_version }}"
+          node-version: '{{ cookiecutter.node_version }}'
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -1827,13 +1868,20 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "{{ cookiecutter.node_version }}"
+          node-version: '{{ cookiecutter.node_version }}'
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build
         run: pnpm exec wxt build -b ${% raw %}{{ matrix.target }}{% endraw %}
 ```
+
+- [ ] **Step 3: Regenerate the ADR index**
+
+Run: `uv run python -m scripts.adr.generate_index`
+Expected: `Generated docs/adr/INDEX.md (2 entries)`. Run only now, not
+right after Step 1 — ADR 002's `scope` names `build.yml`, which Step 2
+only just created.
 
 - [ ] **Step 4: Commit**
 
@@ -1879,7 +1927,9 @@ describe('popup', () => {
     document.body.innerHTML = '<div id="app"></div>';
     await import('../../entrypoints/popup/main');
     const app = document.querySelector('#app');
-    expect(app?.textContent).toBe('Hello from {{ cookiecutter.project_name }}!');
+    expect(app?.textContent).toBe(
+      'Hello from {{ cookiecutter.project_name }}!',
+    );
   });
 });
 ```
@@ -1912,7 +1962,7 @@ Insert a new job (after `type-check`, before `build`) in
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "{{ cookiecutter.node_version }}"
+          node-version: '{{ cookiecutter.node_version }}'
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -1937,7 +1987,7 @@ Run `git status` to catch any related unstaged or untracked files (`pnpm-lock.ya
 
 - [ ] **Step 1: Write ADR 003**
 
-```markdown
+````markdown
 ---
 status: Accepted
 date: 2026-09-10
@@ -1970,20 +2020,22 @@ rather than lint-staged's usual (staged-files-only) convention.
 - `package.json`'s `prepare` script (`husky`) installs the hook on
   `pnpm install`, mirroring `uv run autohooks activate` needing to be run
   once per clone for the Python template.
-```
+````
 
-- [ ] **Step 2: Regenerate the ADR index**
-
-Run: `uv run python -m scripts.adr.generate_index`
-Expected: `Generated docs/adr/INDEX.md (3 entries)`.
-
-- [ ] **Step 3: Write `{{ cookiecutter.github_project_name }}/.husky/pre-commit`**
+- [ ] **Step 2: Write `{{ cookiecutter.github_project_name }}/.husky/pre-commit`**
 
 ```sh
 pnpm exec lint-staged
 pnpm run typecheck
 pnpm run test
 ```
+
+- [ ] **Step 3: Regenerate the ADR index**
+
+Run: `uv run python -m scripts.adr.generate_index`
+Expected: `Generated docs/adr/INDEX.md (3 entries)`. Run only now, not
+right after Step 1 — ADR 003's `scope` names `.husky/pre-commit`, which
+Step 2 only just created.
 
 - [ ] **Step 4: Make the hook executable and verify it installs**
 
@@ -2016,7 +2068,7 @@ Run `git status` to catch any related unstaged or untracked files, then use the 
 
 - [ ] **Step 1: Write ADR 004**
 
-```markdown
+````markdown
 ---
 status: Accepted
 date: 2026-09-10
@@ -2052,14 +2104,9 @@ depend on either browser's extension-loading mechanics) plus manual
   add — Firefox correctness ahead of a release rests on the shared unit
   tests plus `pnpm build:firefox` succeeding, not on an automated e2e
   gate the skill could point to.
-```
+````
 
-- [ ] **Step 2: Regenerate the ADR index**
-
-Run: `uv run python -m scripts.adr.generate_index`
-Expected: `Generated docs/adr/INDEX.md (4 entries)`.
-
-- [ ] **Step 3: Write `{{ cookiecutter.github_project_name }}/playwright.config.ts`**
+- [ ] **Step 2: Write `{{ cookiecutter.github_project_name }}/playwright.config.ts`**
 
 ```typescript
 import { defineConfig } from '@playwright/test';
@@ -2073,7 +2120,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Write `{{ cookiecutter.github_project_name }}/test/e2e/fixtures.ts`**
+- [ ] **Step 3: Write `{{ cookiecutter.github_project_name }}/test/e2e/fixtures.ts`**
 
 ```typescript
 import { test as base, chromium, type BrowserContext } from '@playwright/test';
@@ -2118,7 +2165,7 @@ export const test = base.extend<{
 export const expect = test.expect;
 ```
 
-- [ ] **Step 5: Write `{{ cookiecutter.github_project_name }}/test/e2e/popup.spec.ts`**
+- [ ] **Step 4: Write `{{ cookiecutter.github_project_name }}/test/e2e/popup.spec.ts`**
 
 ```typescript
 import { expect, test } from './fixtures';
@@ -2132,19 +2179,35 @@ test('popup renders a greeting', async ({ context, extensionId }) => {
 });
 ```
 
+- [ ] **Step 5: Regenerate the ADR index**
+
+Run: `uv run python -m scripts.adr.generate_index`
+Expected: `Generated docs/adr/INDEX.md (4 entries)`. Run only now, not
+right after Step 1 — ADR 004's `scope` names `playwright.config.ts` and
+`test/e2e/`, which Steps 2–4 only just created.
+
 - [ ] **Step 6: Build the extension and run the e2e test**
 
-Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm build`
-Expected: exits 0, creates `.output/chrome-mv3/`.
+WXT reads `package.json`'s `version` field to build the manifest, and
+that field is still the literal, unrendered `{{ cookiecutter.version }}`
+in the tracked template directory — `wxt build` can't parse that as
+semver. Like Task 8 Step 5, this needs a baked copy:
 
-Run: `pnpm exec playwright install --with-deps chromium`
-Expected: installs the Playwright-managed Chromium build (this sandbox may need the `--with-deps` system packages; if that step is not permitted here, still run the next command — a missing browser produces a clear "browser not found" failure, distinct from a real test failure).
-
-Run: `pnpm test:e2e`
-Expected: 1 passed.
-
-Run: `cd .. && rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt" "{{ cookiecutter.github_project_name }}/.output" "{{ cookiecutter.github_project_name }}/playwright-report" "{{ cookiecutter.github_project_name }}/test-results"`
-Per the Global Constraints note — must happen before Step 8's commit.
+```bash
+rm -rf /tmp/plan-verify
+uvx "cookiecutter>=2,<3" . --no-input --output-dir /tmp/plan-verify
+cd /tmp/plan-verify/my-browser-plugin
+pnpm install
+pnpm build
+pnpm exec playwright install --with-deps chromium
+pnpm test:e2e
+```
+Expected: every command exits 0 (`pnpm build` creates `.output/chrome-mv3/`;
+`pnpm test:e2e` reports 1 passed). Playwright's browser install may need
+system packages this sandbox doesn't grant — if `playwright install`
+can't complete, `pnpm test:e2e` still fails with a clear "browser not
+found" error, distinct from a real test failure. Nothing here touches
+the tracked template directory, so no cleanup step is needed afterward.
 
 - [ ] **Step 7: Add the `e2e` job to `build.yml`**
 
@@ -2162,7 +2225,7 @@ Insert a new job (after `build`) in
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "{{ cookiecutter.node_version }}"
+          node-version: '{{ cookiecutter.node_version }}'
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -2193,7 +2256,7 @@ Run `git status` to catch any related unstaged or untracked files, then use the 
 
 - [ ] **Step 1: Write ADR 005**
 
-```markdown
+````markdown
 ---
 status: Accepted
 date: 2026-09-10
@@ -2233,14 +2296,9 @@ Sphinx's `make html`.
   have been a Sphinx `.rst` page (a migration guide, for instance) lives
   in the repo and is linked from `README.md` instead (see the `release`
   skill).
-```
+````
 
-- [ ] **Step 2: Regenerate the ADR index**
-
-Run: `uv run python -m scripts.adr.generate_index`
-Expected: `Generated docs/adr/INDEX.md (5 entries)`.
-
-- [ ] **Step 3: Write `{{ cookiecutter.github_project_name }}/typedoc.json`**
+- [ ] **Step 2: Write `{{ cookiecutter.github_project_name }}/typedoc.json`**
 
 ```json
 {
@@ -2250,7 +2308,7 @@ Expected: `Generated docs/adr/INDEX.md (5 entries)`.
 }
 ```
 
-- [ ] **Step 4: Write `{{ cookiecutter.github_project_name }}/.readthedocs.yaml`**
+- [ ] **Step 3: Write `{{ cookiecutter.github_project_name }}/.readthedocs.yaml`**
 
 ```yaml
 # https://docs.readthedocs.io/en/stable/config-file/v2.html
@@ -2259,7 +2317,7 @@ version: 2
 build:
   os: ubuntu-24.04
   tools:
-    nodejs: "{{ cookiecutter.node_version }}"
+    nodejs: '{{ cookiecutter.node_version }}'
 
   jobs:
     post_install:
@@ -2270,13 +2328,30 @@ build:
         - pnpm exec typedoc --out $READTHEDOCS_OUTPUT/html
 ```
 
+- [ ] **Step 4: Regenerate the ADR index**
+
+Run: `uv run python -m scripts.adr.generate_index`
+Expected: `Generated docs/adr/INDEX.md (5 entries)`. Run only now, not
+right after Step 1 — ADR 005's `scope` names `typedoc.json` and
+`.readthedocs.yaml`, which Steps 2–3 only just created.
+
 - [ ] **Step 5: Build the docs locally**
 
-Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm typedoc`
-Expected: exits 0, creates `docs/_build/html/index.html`.
+`typedoc`'s glob-based entry-point discovery can't handle the literal
+`{{ }}` characters in `{{ cookiecutter.github_project_name }}`'s own
+directory name, so — unlike `pnpm install`/`test`/`lint` — this needs a
+baked copy, not the tracked template directory directly:
 
-Run: `cd .. && rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt" "{{ cookiecutter.github_project_name }}/docs/_build"`
-Per the Global Constraints note — must happen before Step 7's commit.
+```bash
+rm -rf /tmp/plan-verify
+uvx "cookiecutter>=2,<3" . --no-input --output-dir /tmp/plan-verify
+cd /tmp/plan-verify/my-browser-plugin
+pnpm install
+pnpm typedoc
+```
+Expected: every command exits 0, creates `docs/_build/html/index.html`
+inside `/tmp/plan-verify/my-browser-plugin`. Nothing here touches the
+tracked template directory, so no cleanup step is needed afterward.
 
 - [ ] **Step 6: Add the `docs` job to `build.yml`**
 
@@ -2294,7 +2369,7 @@ Insert a new job (after `e2e`) in
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "{{ cookiecutter.node_version }}"
+          node-version: '{{ cookiecutter.node_version }}'
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -2317,7 +2392,7 @@ Run `git status` to catch any related unstaged or untracked files, then use the 
 
 - [ ] **Step 1: Write ADR 006**
 
-```markdown
+````markdown
 ---
 status: Accepted
 date: 2026-09-10
@@ -2352,36 +2427,35 @@ npm-specific Renovate configuration is needed.
   setup step outside this template's own files.
 - The SHA pins already in `ci.yml`/`build.yml` are a snapshot Renovate
   will keep moving forward from here.
+````
+
+- [ ] **Step 2: Write `renovate.json`**
+
+```json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ]
+}
 ```
 
-- [ ] **Step 2: Regenerate the ADR index**
+- [ ] **Step 3: Write `{{ cookiecutter.github_project_name }}/renovate.json`**
+
+```json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"]
+}
+```
+
+- [ ] **Step 4: Regenerate the ADR index**
 
 Run: `uv run python -m scripts.adr.generate_index`
-Expected: `Generated docs/adr/INDEX.md (6 entries)`.
-
-- [ ] **Step 3: Write `renovate.json`**
-
-```json
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "helpers:pinGitHubActionDigests"
-  ]
-}
-```
-
-- [ ] **Step 4: Write `{{ cookiecutter.github_project_name }}/renovate.json`**
-
-```json
-{
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "helpers:pinGitHubActionDigests"
-  ]
-}
-```
+Expected: `Generated docs/adr/INDEX.md (6 entries)`. Run only now, not
+right after Step 1 — ADR 006's `scope` names both `renovate.json` files,
+which Steps 2–3 only just created.
 
 - [ ] **Step 5: Commit**
 
@@ -2400,7 +2474,7 @@ Run `git status` to catch any related unstaged or untracked files, then use the 
 
 - [ ] **Step 1: Write ADR 007**
 
-```markdown
+````markdown
 ---
 status: Accepted
 date: 2026-09-10
@@ -2438,14 +2512,9 @@ is the slower, end-to-end one.
 - Future changes to the templated project's `package.json`/CI/docs need
   to keep working under this workflow, not just render without Jinja
   errors.
-```
+````
 
-- [ ] **Step 2: Regenerate the ADR index**
-
-Run: `uv run python -m scripts.adr.generate_index`
-Expected: `Generated docs/adr/INDEX.md (7 entries)`.
-
-- [ ] **Step 3: Write `.github/workflows/generate-and-validate.yml`**
+- [ ] **Step 2: Write `.github/workflows/generate-and-validate.yml`**
 
 ```yaml
 # Bakes a real project from this template with cookiecutter and validates the
@@ -2512,7 +2581,7 @@ jobs:
         working-directory: /tmp/baked/my-browser-plugin
 ```
 
-- [ ] **Step 4: Verify the generate-and-validate steps locally**
+- [ ] **Step 3: Verify the generate-and-validate steps locally**
 
 Run, from the repo root:
 ```bash
@@ -2530,6 +2599,15 @@ Expected: every command exits 0 — this is the actual sequence
 `generate-and-validate.yml` runs, exercised locally before trusting CI to
 catch a mistake.
 
+- [ ] **Step 4: Regenerate the ADR index**
+
+Run, from the repo root: `uv run python -m scripts.adr.generate_index`
+Expected: `Generated docs/adr/INDEX.md (7 entries)`. Run only now, not
+right after Step 1 — ADR 007's `scope` names
+`.github/workflows/generate-and-validate.yml`, which Step 2 only just
+created; the ADR index generator hard-errors on a scope entry that
+doesn't exist on disk yet.
+
 - [ ] **Step 5: Commit**
 
 Run `git status` to catch any related unstaged or untracked files, then use the `creative-commits` skill.
@@ -2544,7 +2622,7 @@ Run `git status` to catch any related unstaged or untracked files, then use the 
 
 - [ ] **Step 1: Write `README.md`**
 
-```markdown
+````markdown
 # cookiecutter-browser-plugin
 
 [![CI](https://github.com/todofixthis/cookiecutter-browser-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/todofixthis/cookiecutter-browser-plugin/actions/workflows/ci.yml)
@@ -2572,7 +2650,7 @@ You'll be prompted for a project name, a short description, and an author name/e
 ## Developing this template
 
 See `AGENTS.md` for the dev workflow (`uv sync --group=dev`, `uv run pytest` bakes the template and checks the output, `uv run mypy hooks scripts test`, `uv run ruff check hooks scripts test`).
-```
+````
 
 - [ ] **Step 2: Full own-repo verification**
 
@@ -2590,18 +2668,24 @@ Expected: `Generated docs/adr/INDEX.md (7 entries)`, and `git diff --exit-code d
 
 - [ ] **Step 3: Full templated-project verification**
 
-Run, from `{{ cookiecutter.github_project_name }}/`:
+Like Task 7 Step 6 and Task 8 Step 5, `pnpm build`/`pnpm typedoc` can't
+run against the tracked template directory itself (its `package.json`
+version and directory name are still literal, unrendered Jinja) — bake
+first, exactly as `generate-and-validate.yml` does:
+
 ```bash
+rm -rf /tmp/plan-verify
+uvx "cookiecutter>=2,<3" . --no-input --output-dir /tmp/plan-verify
+cd /tmp/plan-verify/my-browser-plugin
 pnpm install
 pnpm lint && pnpm typecheck && pnpm test
 pnpm build && pnpm build:firefox
+pnpm exec playwright install --with-deps chromium
 pnpm test:e2e
 pnpm typedoc
 ```
-Expected: every command exits 0.
-
-Run, from the repo root: `rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt" "{{ cookiecutter.github_project_name }}/.output" "{{ cookiecutter.github_project_name }}/docs/_build" "{{ cookiecutter.github_project_name }}/playwright-report" "{{ cookiecutter.github_project_name }}/test-results"`
-Per the Global Constraints note — must happen before Step 4's commit.
+Expected: every command exits 0. Nothing here touches the tracked
+template directory, so no cleanup step is needed afterward.
 
 - [ ] **Step 4: Commit the README**
 
@@ -2621,6 +2705,24 @@ planning document; the code carries the *what*, the seven ADRs carry the
 ## Intentional Decisions
 
 *(Populated during review — reviewers must not re-raise these)*
+
+- **Task 2's step numbering skips from Step 1 to Step 3, and again jumps
+  from Step 22 to Step 22a before Step 23.** ADR 001's "Regenerate the ADR
+  index" step (originally Step 2) had to move to after `package.json` and
+  `wxt.config.ts` exist (Steps 6–7) — the ADR index generator hard-errors
+  on a scope entry that doesn't exist on disk yet. Renumbering all of
+  Task 2's ~20 remaining steps to close the gap was judged not worth the
+  risk of a manual renumbering error; the same pattern (an ADR-regenerate
+  step relocated to just before its task's Commit step) was applied
+  without a numbering gap in Tasks 4, 6, 7, 8, 9, and 10, where the step
+  count was small enough to renumber cleanly instead.
+- **ADR 002's `scope` covers only `build.yml`, not `.readthedocs.yaml`**,
+  even though its Decision text also discusses `.readthedocs.yaml`'s
+  `tools.nodejs`. `.readthedocs.yaml` isn't written until Task 8, four
+  tasks later — scoping ADR 002 to it would mean the ADR index generator
+  fails every regeneration from Task 4 through Task 7. The prose still
+  documents the connection; only the machine-checked `scope` field is
+  narrower than the decision's full reach.
 
 ## Self-Review Checklist
 
