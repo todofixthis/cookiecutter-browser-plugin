@@ -1,0 +1,3 @@
+minimumReleaseAgeExclude:
+  - '@types/node@22.20.2'
+  - happy-dom@20.14.3
