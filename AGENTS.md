@@ -1,3 +1,9 @@
+This file describes the repo's target shape. Early tasks in the current
+implementation plan (`docs/superpowers/plans/`) create `pyproject.toml`,
+`hooks/`, `scripts/`, and `test/`; the commands below only work once those
+exist — an empty `ls docs/adr/` or a missing `pyproject.toml` means that
+task hasn't landed yet, not that something's broken.
+
 ## Getting Started
 
 Before writing code, check:
@@ -20,7 +26,7 @@ uv run mypy hooks scripts test                # type check
 uv run ruff check hooks scripts test          # lint
 ```
 
-`hooks`/`scripts`/`test` are named explicitly to keep `ruff`/`mypy` scoped to this repo's own Python tooling, without walking the templated project tree (which has no Python of its own to check).
+`hooks`/`scripts`/`test` are named explicitly to keep `ruff`/`mypy` scoped to this repo's own Python tooling. Unlike cookiecutter-py, the templated project here has no `pyproject.toml` for a bare `ruff check`/`mypy` to trip over (it ships `package.json` instead), so this scoping is a speed/clarity choice rather than a workaround for a parsing crash — confirm this still holds once the templated tree exists.
 
 **In a worktree:** the shell can silently reset to the main checkout, so always prefix state-mutating commands (`uv add`/`sync`/`run`) with `cd <worktree> &&` to ensure they hit the worktree.
 
