@@ -26,6 +26,7 @@
 - NZ English; incorporate Te Reo Māori where natural. Comments precede the code they document, never trail it.
 - A significant tooling decision gets an ADR (`docs/adr/`, via the `writing-adrs` skill format) before the task that implements it — several tasks below start with an ADR-writing step for exactly this reason.
 - The `CLAUDE.md` → `AGENTS.md` and `.claude/skills` → `../.agents/skills` symlink pairs (both at this repo's root and inside `{{ cookiecutter.github_project_name }}/`) must survive `git add`/commit as real symlinks and survive cookiecutter's baking process (verified by `test/test_bake.py`).
+- **Any local `pnpm` command (`install`, `build`, `test:e2e`, `typedoc`, ...) run inside the tracked `{{ cookiecutter.github_project_name }}/` directory itself — as opposed to a `/tmp/baked` copy — leaves `node_modules/`, `.wxt/`, `.output/`, `docs/_build/`, etc. on disk.** These are `.gitignore`d, but cookiecutter's own bake walk does *not* consult `.gitignore` — it opens every file under the template root and Jinja-renders it, so a leftover binary file (e.g. `node_modules/**/*.node`/`*.wasm`) crashes the *next* `cookiecutter()` call (`test/test_bake.py`'s fixture, or `uv run pytest` via `autohooks.plugins.pytest` on the next commit) with a `UnicodeDecodeError`, not a test failure. Every step that runs such a command must remove the generated directories again — `rm -rf node_modules .wxt .output coverage docs/_build playwright-report test-results` (never `pnpm-lock.yaml` — that's tracked) — before the task's next bake-dependent step or its Commit step. The steps below say so explicitly at each occurrence; this bullet is the one place the *why* is spelled out.
 - Every commit uses the `creative-commits` skill (per this session's global instructions) and is followed by `git push`.
 
 ## File Map
@@ -891,7 +892,13 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['.output/**', '.wxt/**', 'node_modules/**', 'coverage/**', 'docs/_build/**'],
+    ignores: [
+      '.output/**',
+      '.wxt/**',
+      'node_modules/**',
+      'coverage/**',
+      'docs/_build/**',
+    ],
   },
   js.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
@@ -1501,6 +1508,12 @@ Task 5 gets a chance to add the lockfile.
 `pnpm-lock.yaml` is not in `.gitignore` — it must be committed alongside
 the rest of Task 2's files in Step 23, below.
 
+Run: `rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt"`
+This must happen before Step 20's `test/test_bake.py` runs (Step 21) or
+Step 23 commits — see the Global Constraints note on why leftover
+`pnpm install` output breaks the next bake. `pnpm-lock.yaml` stays; only
+the generated directories go.
+
 - [ ] **Step 20: Write `test/test_bake.py`**
 
 ```python
@@ -1880,6 +1893,9 @@ re-run just confirms nothing has drifted since).
 Run: `pnpm test`
 Expected: 1 passed.
 
+Run: `cd .. && rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt"`
+Per the Global Constraints note — must happen before Step 5's commit.
+
 - [ ] **Step 4: Add the `test` job to `build.yml`**
 
 Insert a new job (after `type-check`, before `build`) in
@@ -1976,6 +1992,9 @@ Run: `chmod +x "{{ cookiecutter.github_project_name }}/.husky/pre-commit"`
 Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm install`
 Expected: exits 0; `pnpm prepare`'s `husky` step runs without error (a git repo with a `.git` directory is required for husky to install the hook — if this fails because the templated directory isn't its own git repo, that's expected in this plan's own worktree since it's a subdirectory, not a generated project's real checkout; verify instead that `.husky/pre-commit` is present and executable, which is what a real generated project's `pnpm install` activates).
 
+Run: `cd .. && rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt"`
+Per the Global Constraints note — must happen before Step 5's commit.
+
 - [ ] **Step 5: Commit**
 
 Run `git status` to catch any related unstaged or untracked files, then use the `creative-commits` skill.
@@ -2069,7 +2088,11 @@ export const test = base.extend<{
   context: BrowserContext;
   extensionId: string;
 }>({
-  context: async (_fixtures, use) => {
+  // Playwright's test.extend() requires a literal object-destructuring
+  // pattern here, even unused — the directive below must sit on the line
+  // immediately above the code it covers, or it silently disables nothing.
+  // eslint-disable-next-line no-empty-pattern
+  context: async ({}, use) => {
     const context = await chromium.launchPersistentContext('', {
       headless: true,
       args: [
@@ -2120,6 +2143,9 @@ Expected: installs the Playwright-managed Chromium build (this sandbox may need 
 Run: `pnpm test:e2e`
 Expected: 1 passed.
 
+Run: `cd .. && rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt" "{{ cookiecutter.github_project_name }}/.output" "{{ cookiecutter.github_project_name }}/playwright-report" "{{ cookiecutter.github_project_name }}/test-results"`
+Per the Global Constraints note — must happen before Step 8's commit.
+
 - [ ] **Step 7: Add the `e2e` job to `build.yml`**
 
 Insert a new job (after `build`) in
@@ -2163,7 +2189,7 @@ Run `git status` to catch any related unstaged or untracked files, then use the 
 - Modify: `{{ cookiecutter.github_project_name }}/.github/workflows/build.yml` — add a `docs` job
 
 **Interfaces:**
-- Consumes: `entrypoints/background.ts`, `entrypoints/popup/main.ts` (Task 2) as TypeDoc entry points; `package.json`'s `docs` script (Task 2).
+- Consumes: `entrypoints/background.ts`, `entrypoints/popup/main.ts` (Task 2) as TypeDoc entry points; `package.json`'s `typedoc` script (Task 2).
 
 - [ ] **Step 1: Write ADR 005**
 
@@ -2248,6 +2274,9 @@ build:
 
 Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm typedoc`
 Expected: exits 0, creates `docs/_build/html/index.html`.
+
+Run: `cd .. && rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt" "{{ cookiecutter.github_project_name }}/docs/_build"`
+Per the Global Constraints note — must happen before Step 7's commit.
 
 - [ ] **Step 6: Add the `docs` job to `build.yml`**
 
@@ -2455,8 +2484,6 @@ jobs:
           # actions/setup-node to key a cache off (unlike build.yml's jobs,
           # which cache against the templated project's own committed
           # lockfile).
-      - name: Install cookiecutter
-        run: uv tool install "cookiecutter>=2,<3"
       - name: Bake a project with default answers
         run: uvx "cookiecutter>=2,<3" . --no-input --output-dir /tmp/baked
       - name: Install the generated project's dependencies
@@ -2572,6 +2599,9 @@ pnpm test:e2e
 pnpm typedoc
 ```
 Expected: every command exits 0.
+
+Run, from the repo root: `rm -rf "{{ cookiecutter.github_project_name }}/node_modules" "{{ cookiecutter.github_project_name }}/.wxt" "{{ cookiecutter.github_project_name }}/.output" "{{ cookiecutter.github_project_name }}/docs/_build" "{{ cookiecutter.github_project_name }}/playwright-report" "{{ cookiecutter.github_project_name }}/test-results"`
+Per the Global Constraints note — must happen before Step 4's commit.
 
 - [ ] **Step 4: Commit the README**
 
