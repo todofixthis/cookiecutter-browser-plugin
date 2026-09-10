@@ -1,0 +1,5 @@
+{
+  "entryPoints": ["entrypoints/background.ts", "entrypoints/popup/main.ts"],
+  "name": "{{ cookiecutter.project_name }}",
+  "tsconfig": "./tsconfig.json"
+}
