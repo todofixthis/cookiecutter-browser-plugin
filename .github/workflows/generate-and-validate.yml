@@ -25,6 +25,13 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Set up pnpm
         uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+        with:
+          # No package.json exists at this checkout for action-setup to read
+          # a `packageManager` field from yet — the project this job bakes
+          # doesn't exist until the "Bake a project" step below. Pin
+          # explicitly, matching the templated project's own
+          # `packageManager` pin.
+          version: 12.3.4
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
