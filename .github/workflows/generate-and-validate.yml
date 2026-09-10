@@ -62,7 +62,9 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
         working-directory: /tmp/baked/my-browser-plugin
       - name: e2e-test the generated project
-        run: pnpm test:e2e
+        # Extensions require a headed browser (see test/e2e/fixtures.ts);
+        # Xvfb provides the virtual display this runner has no real one for.
+        run: xvfb-run --auto-servernum -- pnpm test:e2e
         working-directory: /tmp/baked/my-browser-plugin
       - name: Build the generated project's docs
         run: pnpm typedoc

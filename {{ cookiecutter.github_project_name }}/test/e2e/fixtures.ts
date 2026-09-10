@@ -16,7 +16,10 @@ export const test = base.extend<{
   // eslint-disable-next-line no-empty-pattern
   context: async ({}, use) => {
     const context = await chromium.launchPersistentContext('', {
-      headless: true,
+      // Chromium disables extensions entirely in headless mode (old and
+      // new), so the background service worker this fixture waits for
+      // below never starts — run headed, under Xvfb in CI (see build.yml).
+      headless: false,
       args: [
         `--disable-extensions-except=${EXTENSION_PATH}`,
         `--load-extension=${EXTENSION_PATH}`,
