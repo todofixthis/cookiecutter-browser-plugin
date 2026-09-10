@@ -40,7 +40,7 @@ Own repo (this repo's own dev tooling — Python):
 - `README.md` — this repo's own README
 
 Templated project (everything under `{{ cookiecutter.github_project_name }}/` — TypeScript/WXT):
-- `package.json`, `wxt.config.ts`, `tsconfig.json`, `eslint.config.js`, `.prettierrc.json`, `vitest.config.ts`, `playwright.config.ts`, `typedoc.json`, `.readthedocs.yaml`, `.gitignore`, `renovate.json`, `LICENCE.txt`, `AGENTS.md`/`CLAUDE.md`, `README.md`
+- `package.json`, `wxt.config.ts`, `tsconfig.json`, `eslint.config.js`, `.prettierrc.json`, `.prettierignore`, `vitest.config.ts`, `playwright.config.ts`, `typedoc.json`, `.readthedocs.yaml`, `.gitignore`, `renovate.json`, `LICENCE.txt`, `AGENTS.md`/`CLAUDE.md`, `README.md`
 - `entrypoints/background.ts`, `entrypoints/popup/index.html`, `entrypoints/popup/main.ts` — the placeholder extension
 - `test/unit/popup.test.ts` — Vitest
 - `test/e2e/fixtures.ts`, `test/e2e/popup.spec.ts` — Playwright, Chromium-only
@@ -592,11 +592,13 @@ Run `git status` to catch any related unstaged or untracked files (e.g. `uv.lock
 - Create: `{{ cookiecutter.github_project_name }}/tsconfig.json`
 - Create: `{{ cookiecutter.github_project_name }}/eslint.config.js`
 - Create: `{{ cookiecutter.github_project_name }}/.prettierrc.json`
+- Create: `{{ cookiecutter.github_project_name }}/.prettierignore`
 - Create: `{{ cookiecutter.github_project_name }}/entrypoints/background.ts`
 - Create: `{{ cookiecutter.github_project_name }}/entrypoints/popup/index.html`
 - Create: `{{ cookiecutter.github_project_name }}/entrypoints/popup/main.ts`
 - Create: `{{ cookiecutter.github_project_name }}/LICENCE.txt`
 - Create: `{{ cookiecutter.github_project_name }}/.gitignore`
+- Create: `{{ cookiecutter.github_project_name }}/README.md`
 - Create: `{{ cookiecutter.github_project_name }}/AGENTS.md`
 - Create: `{{ cookiecutter.github_project_name }}/CLAUDE.md` (symlink to `AGENTS.md`)
 - Create: `{{ cookiecutter.github_project_name }}/.claude/settings.json`
@@ -775,6 +777,7 @@ if __name__ == "__main__":
 {
   "name": "{{ cookiecutter.package_name }}",
   "private": true,
+  "type": "module",
   "version": "{{ cookiecutter.version }}",
   "packageManager": "pnpm@12.3.4",
   "engines": {
@@ -794,7 +797,7 @@ if __name__ == "__main__":
     "lint": "eslint . && prettier --check .",
     "format": "eslint --fix . && prettier --write .",
     "typecheck": "tsc --noEmit",
-    "docs": "typedoc --out docs/_build/html"
+    "typedoc": "typedoc --out docs/_build/html"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -814,8 +817,13 @@ if __name__ == "__main__":
     "wxt": "^0.21.4"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
-    "*.{js,cjs,mjs,json,md,html,css}": ["prettier --write"]
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,cjs,mjs,json,md,html,css}": [
+      "prettier --write"
+    ]
   }
 }
 ```
@@ -856,9 +864,21 @@ export default defineConfig({
   "compilerOptions": {
     "strict": true
   },
-  "include": ["entrypoints", "test", "wxt.config.ts", "vitest.config.ts", "playwright.config.ts"]
+  "include": [
+    ".wxt/types",
+    "entrypoints",
+    "test",
+    "wxt.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts"
+  ]
 }
 ```
+
+`include` is not merged across `extends` — this array replaces
+`.wxt/tsconfig.json`'s own `include`, so `.wxt/types` (declaring the
+ambient `browser` global and `defineBackground`) must be listed
+explicitly or `tsc`/typed ESLint fail on the placeholder code itself.
 
 - [ ] **Step 9: Write `{{ cookiecutter.github_project_name }}/eslint.config.js`**
 
@@ -888,6 +908,13 @@ export default tseslint.config(
     },
   },
   eslintConfigPrettier,
+  {
+    // eslint.config.js itself (and any other plain .js file) isn't part of
+    // the typed program tsconfig.json describes — drop typed-linting rules
+    // for it rather than have projectService fail to place it in a project.
+    files: ['**/*.js'],
+    ...tseslint.configs.disableTypeChecked,
+  },
 );
 ```
 
@@ -899,6 +926,21 @@ export default tseslint.config(
   "semi": true,
   "trailingComma": "all"
 }
+```
+
+- [ ] **Step 10a: Write `{{ cookiecutter.github_project_name }}/.prettierignore`**
+
+Prettier v3 doesn't read `.gitignore` automatically — without this,
+`prettier --check .` (part of `pnpm lint`) fails on WXT's own generated
+build metadata:
+
+```gitignore
+.output/
+.wxt/
+node_modules/
+coverage/
+docs/_build/
+pnpm-lock.yaml
 ```
 
 - [ ] **Step 11: Write the placeholder extension**
@@ -993,6 +1035,61 @@ test-results/
 coverage/
 ```
 
+- [ ] **Step 13a: Write `{{ cookiecutter.github_project_name }}/README.md`**
+
+Needed by the `release` skill (Step 18, below), which links breaking-change
+migration guides from this file's upgrade-alert listing.
+
+```markdown
+[![CI](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_project_name }}/actions/workflows/build.yml/badge.svg)](https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.github_project_name }}/actions/workflows/build.yml)
+[![Docs](https://readthedocs.org/projects/{{ cookiecutter.package_name }}/badge/?version=latest)](https://{{ cookiecutter.package_name }}.readthedocs.io/)
+
+# {{ cookiecutter.project_name }}
+
+{{ cookiecutter.project_short_description }}
+
+Targets Manifest V3 on both Firefox (primary) and Chromium.
+
+## Getting Started
+
+TODO
+
+## Maintainers
+
+To install for local development:
+
+1. [Install pnpm](https://pnpm.io/installation) (only needs to be done once).
+2. Install dependencies: `pnpm install` (also installs the pre-commit hook via husky).
+
+### Running Tests and Type Checker
+
+```bash
+pnpm test        # unit tests (vitest)
+pnpm test:e2e     # e2e tests (Playwright, Chromium only — see docs/adr/004)
+pnpm typecheck
+```
+
+### Building
+
+```bash
+pnpm build            # Chromium
+pnpm build:firefox    # Firefox
+```
+
+### Documentation
+
+```bash
+pnpm typedoc
+```
+
+## Releases
+
+See the `release` agent skill (`.agents/skills/release/SKILL.md`) for the
+full process — version bump, packaging for both browsers, GPG-signed
+artefacts, and GitHub release creation. Store submission (AMO, Chrome Web
+Store) is a manual, developer-run step.
+```
+
 - [ ] **Step 14: Write `{{ cookiecutter.github_project_name }}/AGENTS.md`**
 
 ```markdown
@@ -1018,7 +1115,7 @@ pnpm test                    # unit tests (vitest)
 pnpm test:e2e                # e2e tests (Playwright, Chromium only — see docs/adr/004)
 pnpm lint                    # eslint + prettier --check
 pnpm typecheck                # tsc --noEmit
-pnpm docs                    # build API docs (TypeDoc) into docs/_build/html
+pnpm typedoc                 # build API docs (TypeDoc) into docs/_build/html
 ```
 
 **In a worktree:** the shell can silently reset to the main checkout, so always prefix state-mutating commands (`pnpm add`/`install`/`run`) with `cd <worktree> &&` to ensure they hit the worktree.
@@ -1182,8 +1279,11 @@ pnpm build && pnpm build:firefox
 pnpm zip && pnpm zip:firefox
 ```
 Sync first — pulling `main` may have brought in dependency changes.
-Artefacts land in `.output/*.zip`. Nothing under `.output/` is tracked, so
-removing the whole directory is safe — and necessary: a stale build from a
+Artefacts land in `.output/*.zip` — `pnpm zip:firefox` also emits a
+`*-sources.zip` (AMO's required source bundle for a minified build); it's
+swept up by the same glob in the steps below, no separate handling needed.
+Nothing under `.output/` is tracked, so removing the whole directory is
+safe — and necessary: a stale build from a
 previous version would otherwise sit alongside the new one.
 
 ### 10. Tag and push
@@ -1387,6 +1487,20 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm build:firefox
 ```
 ```
 
+- [ ] **Step 19a: Install JS dependencies and commit the lockfile**
+
+Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm install`
+Expected: exits 0, generates `pnpm-lock.yaml` and `.wxt/` (via the
+`postinstall` script). This must happen before Task 4 commits
+`build.yml` — that workflow's `pnpm install --frozen-lockfile` and
+`actions/setup-node`'s `cache: pnpm` both require a committed
+`pnpm-lock.yaml` to exist; without this step, Task 4's own commit would
+push a CI run against jobs that fail at "Install dependencies" before
+Task 5 gets a chance to add the lockfile.
+
+`pnpm-lock.yaml` is not in `.gitignore` — it must be committed alongside
+the rest of Task 2's files in Step 23, below.
+
 - [ ] **Step 20: Write `test/test_bake.py`**
 
 ```python
@@ -1460,6 +1574,12 @@ def test_generates_licence(baked_project: Path) -> None:
     assert "MIT" in licence_text
 
 
+def test_generates_readme(baked_project: Path) -> None:
+    """The generated project ships its own README, distinct from AGENTS.md."""
+    readme_text = (baked_project / "README.md").read_text(encoding="utf-8")
+    assert "My Browser Plugin" in readme_text
+
+
 def test_claude_md_stays_a_symlink(baked_project: Path) -> None:
     """CLAUDE.md survives baking as a real symlink to AGENTS.md, not a copy.
 
@@ -1482,7 +1602,7 @@ def test_claude_skills_stays_a_symlink(baked_project: Path) -> None:
 - [ ] **Step 21: Run the test suite**
 
 Run: `uv run pytest`
-Expected: 7 passed.
+Expected: 8 passed.
 
 - [ ] **Step 22: Lint and type-check**
 
@@ -1751,18 +1871,14 @@ describe('popup', () => {
 });
 ```
 
-- [ ] **Step 3: Install dependencies and run the test**
+- [ ] **Step 3: Run the test**
 
 Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm install`
-Expected: exits 0, generates `pnpm-lock.yaml` and `.wxt/` (via the `postinstall` script).
+Expected: exits 0 (dependencies already installed in Task 2 Step 19a; this
+re-run just confirms nothing has drifted since).
 
 Run: `pnpm test`
 Expected: 1 passed.
-
-(This is the first task to actually run `pnpm install`, so it's also the
-first real check that Task 2's `package.json` dependency versions
-resolve together — if install fails here, fix `package.json` before
-continuing rather than in a later task.)
 
 - [ ] **Step 4: Add the `test` job to `build.yml`**
 
@@ -1913,9 +2029,10 @@ depend on either browser's extension-loading mechanics) plus manual
 - `build.yml`'s `e2e` job builds and tests Chromium only; there is no
   Firefox equivalent job to add later without new tooling (e.g.
   Selenium/geckodriver), which is out of scope for this template.
-- The `release` skill's Phase 1 research doesn't gate on Firefox e2e
-  results — there are none — only on unit tests and the build succeeding
-  for both targets.
+- The `release` skill has no Firefox e2e step to reference, and none to
+  add — Firefox correctness ahead of a release rests on the shared unit
+  tests plus `pnpm build:firefox` succeeding, not on an automated e2e
+  gate the skill could point to.
 ```
 
 - [ ] **Step 2: Regenerate the ADR index**
@@ -1968,7 +2085,9 @@ export const test = base.extend<{
     if (!worker) {
       worker = await context.waitForEvent('serviceworker');
     }
-    const extensionId = worker.url().split('/')[2];
+    // Not `.split('/')[2]` — `.wxt/tsconfig.json` sets
+    // noUncheckedIndexedAccess, which types that as `string | undefined`.
+    const extensionId = new URL(worker.url()).hostname;
     await use(extensionId);
   },
 });
@@ -1984,7 +2103,9 @@ import { expect, test } from './fixtures';
 test('popup renders a greeting', async ({ context, extensionId }) => {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extensionId}/popup.html`);
-  await expect(page.locator('#app')).toHaveText('Hello from {{ cookiecutter.project_name }}!');
+  await expect(page.locator('#app')).toHaveText(
+    'Hello from {{ cookiecutter.project_name }}!',
+  );
 });
 ```
 
@@ -2125,7 +2246,7 @@ build:
 
 - [ ] **Step 5: Build the docs locally**
 
-Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm docs`
+Run: `cd "{{ cookiecutter.github_project_name }}" && pnpm typedoc`
 Expected: exits 0, creates `docs/_build/html/index.html`.
 
 - [ ] **Step 6: Add the `docs` job to `build.yml`**
@@ -2149,7 +2270,7 @@ Insert a new job (after `e2e`) in
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Check docs build
-        run: pnpm docs
+        run: pnpm typedoc
 ```
 
 - [ ] **Step 7: Commit**
@@ -2360,7 +2481,7 @@ jobs:
         run: pnpm test:e2e
         working-directory: /tmp/baked/my-browser-plugin
       - name: Build the generated project's docs
-        run: pnpm docs
+        run: pnpm typedoc
         working-directory: /tmp/baked/my-browser-plugin
 ```
 
@@ -2376,7 +2497,7 @@ pnpm lint && pnpm typecheck && pnpm test
 pnpm build && pnpm build:firefox
 pnpm exec playwright install --with-deps chromium
 pnpm test:e2e
-pnpm docs
+pnpm typedoc
 ```
 Expected: every command exits 0 — this is the actual sequence
 `generate-and-validate.yml` runs, exercised locally before trusting CI to
@@ -2429,7 +2550,7 @@ See `AGENTS.md` for the dev workflow (`uv sync --group=dev`, `uv run pytest` bak
 - [ ] **Step 2: Full own-repo verification**
 
 Run: `uv run pytest`
-Expected: 7 passed.
+Expected: 8 passed.
 
 Run: `uv run mypy hooks scripts test`
 Expected: `Success: no issues found`.
@@ -2448,7 +2569,7 @@ pnpm install
 pnpm lint && pnpm typecheck && pnpm test
 pnpm build && pnpm build:firefox
 pnpm test:e2e
-pnpm docs
+pnpm typedoc
 ```
 Expected: every command exits 0.
 
