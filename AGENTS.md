@@ -1,19 +1,10 @@
-This file describes the repo's target shape. Early tasks in the current
-implementation plan (`docs/superpowers/plans/`) create `pyproject.toml`,
-`hooks/`, `scripts/`, and `test/`; the commands below only work once those
-exist — an empty `ls docs/adr/` or a missing `pyproject.toml` means that
-task hasn't landed yet, not that something's broken.
-
 ## Getting Started
 
-Before writing code, check:
-
-- `docs/adr/INDEX.md` — prior decisions (don't re-litigate)
-- `docs/superpowers/plans/` — current implementation plan, if one exists
+Before writing code, check `docs/adr/INDEX.md` for prior decisions (don't re-litigate).
 
 ## Architecture Decision Records
 
-When making significant decisions — choosing between libraries, patterns, tools, or conventions — you **must** write an ADR before implementing the decision. Use the `writing-adrs` skill for the format and conventions. ADRs live in `docs/adr/`. Before writing, run `ls docs/adr/` to find the highest existing number and increment it.
+When making significant decisions — choosing between libraries, patterns, tools, or conventions — you **must** write an ADR before implementing the decision. Use the `phx:writing-adrs` skill for the format and conventions. ADRs live in `docs/adr/`. Before writing, run `ls docs/adr/` to find the highest existing number and increment it.
 
 ## Commands
 
@@ -22,11 +13,11 @@ uv run autohooks activate --mode=pythonpath   # install pre-commit hook (once pe
 uv run git commit                             # always use instead of git commit (runs autohooks)
 uv sync --group=dev                           # sync deps after pulling
 uv run pytest                                 # bake the template and validate the output
-uv run mypy hooks scripts test                # type check
-uv run ruff check hooks scripts test          # lint
+uv run mypy hooks test                        # type check
+uv run ruff check hooks test                  # lint
 ```
 
-`hooks`/`scripts`/`test` are named explicitly to keep `ruff`/`mypy` scoped to this repo's own Python tooling. Unlike cookiecutter-py, the templated project here has no `pyproject.toml` for a bare `ruff check`/`mypy` to trip over (it ships `package.json` instead), so this scoping is a speed/clarity choice rather than a workaround for a parsing crash — confirm this still holds once the templated tree exists.
+`hooks`/`test` are named explicitly to keep `ruff`/`mypy` scoped to this repo's own Python tooling. Unlike cookiecutter-py, the templated project here has no `pyproject.toml` for a bare `ruff check`/`mypy` to trip over (it ships `package.json` instead), so this scoping is a speed/clarity choice rather than a workaround for a parsing crash — confirm this still holds once the templated tree exists.
 
 **In a worktree:** the shell can silently reset to the main checkout, so always prefix state-mutating commands (`uv add`/`sync`/`run`) with `cd <worktree> &&` to ensure they hit the worktree.
 
@@ -36,14 +27,13 @@ This repo is a [cookiecutter](https://cookiecutter.readthedocs.io/) template, no
 
 - `cookiecutter.json` / `hooks/pre_prompt.py` / `hooks/post_gen_project.py` — the prompts a user answers, a pre-prompt hook that fills in `this_year` before prompting starts, and a post-gen hook that restores symlinks cookiecutter's own copy step would otherwise dereference into independent files.
 - `{{ cookiecutter.github_project_name }}/` — the templated browser-extension project. Everything a generated project ships (its own `package.json`, CI, docs, agent infra) lives here, separate from this repo's own dev tooling below.
-- `scripts/` — this repo's own dev tooling (the ADR index generator).
 - `test/` — bakes the template with default answers and asserts the output is well-formed (no leftover Jinja markers, valid `package.json`, etc.). This is this repo's only test suite; there's no source package of its own to unit-test.
 
 The `.github/workflows/generate-and-validate.yml` workflow goes further than `test/`: it bakes a real project and runs *that project's own* lint/type-check/unit-test/build(-both-targets)/e2e/docs-build commands, so a template change that breaks what it generates fails CI even if `test/`'s lighter checks pass.
 
 ## Docstrings
 
-Google/Napoleon format (`Args:`, `Returns:`, `Note:`) — not Sphinx `:param:` style. Applies to this repo's own Python code (`hooks`/`scripts`/`test`); the templated project's own TypeScript conventions live in its own `AGENTS.md`.
+Google/Napoleon format (`Args:`, `Returns:`, `Note:`) — not Sphinx `:param:` style. Applies to this repo's own Python code (`hooks`/`test`); the templated project's own TypeScript conventions live in its own `AGENTS.md`.
 
 ## Tests
 

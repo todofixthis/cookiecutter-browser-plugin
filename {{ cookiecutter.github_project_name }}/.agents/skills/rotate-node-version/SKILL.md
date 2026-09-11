@@ -26,5 +26,7 @@ Then verify everything still passes:
 
 ```bash
 pnpm install
-pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm build:firefox
+pnpm verify
 ```
+
+`verify` in `package.json` is the single source of truth for "test all the things" — update it there, not here, if the set of checks changes.

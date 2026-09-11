@@ -21,7 +21,8 @@
     "lint": "eslint . && prettier --check .",
     "format": "eslint --fix . && prettier --write .",
     "typecheck": "tsc --noEmit",
-    "typedoc": "typedoc --out docs/_build/html"
+    "typedoc": "typedoc --out docs/_build/html",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm build:firefox"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

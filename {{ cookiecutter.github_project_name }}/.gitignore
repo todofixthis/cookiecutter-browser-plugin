@@ -5,18 +5,18 @@
 .output/
 .wxt/
 
+# Coverage
+coverage/
+
 # Dependencies
 node_modules/
-
-# dotenv
-.env
 
 # Docs build
 docs/_build/
 
+# dotenv
+.env
+
 # Playwright
 playwright-report/
 test-results/
-
-# Coverage
-coverage/
