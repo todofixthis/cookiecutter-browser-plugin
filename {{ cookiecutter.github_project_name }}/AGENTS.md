@@ -25,6 +25,8 @@ pnpm typedoc                 # build API docs (TypeDoc) into docs/_build/html
 
 **In a worktree:** the shell can silently reset to the main checkout, so always prefix state-mutating commands (`pnpm add`/`install`/`run`) with `cd <worktree> &&` to ensure they hit the worktree.
 
+`pnpm-workspace.yaml`'s `minimumReleaseAgeExclude` is pnpm's own bookkeeping, not a hand-maintained list. When pnpm resolves a dependency release less than about a day old (e.g. `pnpm add` of a brand-new version), it installs it anyway and records the entry there. Commit the file along with the lockfile change. An entry is safe to remove once its release is over two days old. The version is after the last `@`, so for `@scope/pkg@1.2.3`, `pnpm view @scope/pkg time --json | grep '"1.2.3"'` prints its release date. Delete the file when it's empty. `pnpm install --frozen-lockfile` passing without an entry proves nothing, because frozen installs skip the age check.
+
 ## Architecture
 
 - `entrypoints/` — WXT convention: one file/folder per extension entrypoint (`background.ts`, `popup/`). WXT compiles this into a manifest per build target (`wxt build -b chrome|firefox`); there's no hand-maintained `manifest.json`.

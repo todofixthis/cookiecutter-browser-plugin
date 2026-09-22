@@ -6,9 +6,9 @@
   "include": [
     ".wxt/types",
     "entrypoints",
+    "playwright.config.ts",
     "test",
-    "wxt.config.ts",
     "vitest.config.ts",
-    "playwright.config.ts"
+    "wxt.config.ts"
   ]
 }
