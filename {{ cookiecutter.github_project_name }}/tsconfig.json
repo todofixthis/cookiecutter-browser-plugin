@@ -1,0 +1,14 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true
+  },
+  "include": [
+    ".wxt/types",
+    "entrypoints",
+    "playwright.config.ts",
+    "test",
+    "vitest.config.ts",
+    "wxt.config.ts"
+  ]
+}

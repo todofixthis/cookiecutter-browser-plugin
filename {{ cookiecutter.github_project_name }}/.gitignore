@@ -1,0 +1,22 @@
+# Agent worktrees
+.claude/worktrees/
+
+# Build output
+.output/
+.wxt/
+
+# Coverage
+coverage/
+
+# Dependencies
+node_modules/
+
+# Docs build
+docs/_build/
+
+# dotenv
+.env
+
+# Playwright
+playwright-report/
+test-results/
