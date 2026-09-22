@@ -7,7 +7,7 @@
   "package_name": "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
   "project_short_description": "A short description of the project",
   "gecko_extension_id": "{{ cookiecutter.package_name }}@{{ cookiecutter.github_username }}",
-  "node_version": "22",
+  "node_version": "24",
   "this_year": "(see hooks/pre_prompt.py)",
   "version": "0.1.0"
 }

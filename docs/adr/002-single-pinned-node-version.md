@@ -1,7 +1,7 @@
 ---
 status: Accepted
 date: 2026-09-10
-scope: ["{{ cookiecutter.github_project_name }}/.github/workflows/build.yml"]
+scope: ["cookiecutter.json", "{{ cookiecutter.github_project_name }}/.github/workflows/build.yml", "{{ cookiecutter.github_project_name }}/.nvmrc", "{{ cookiecutter.github_project_name }}/.readthedocs.yaml", "{{ cookiecutter.github_project_name }}/package.json"]
 summary: CI runs a single pinned Node LTS version, not a support matrix — Node is this project's build tooling, not the runtime the shipped extension runs under.
 ---
 
@@ -19,12 +19,25 @@ user have" question a matrix would answer.
 
 ## Decision
 
-Pin a single Node version (`cookiecutter.node_version`, templated into
-`package.json`'s `engines.node`, CI's `node-version`, and
-`.readthedocs.yaml`'s `tools.nodejs`), kept current by the
+Pin a single Node version — the current LTS major — kept current by the
 `rotate-node-version` skill rather than tested across a range.
+`cookiecutter.node_version` drives it: a generated project gets it as
+`.nvmrc`, which every CI job reads via `node-version-file`, and as
+`package.json`'s `engines.node` and `.readthedocs.yaml`'s `tools.nodejs`,
+which can't read `.nvmrc`. The one exception is `@types/node`, a literal
+version whose major must match — bumping it means regenerating
+`pnpm-lock.yaml`, which pins the exact release.
 
 ## Consequences
+
+- The `rotate-node-version` skill is for generated projects; don't follow
+  it in this repo, where `.nvmrc` and `package.json` hold Jinja. Here, a
+  rotation bumps `cookiecutter.node_version` and the template's
+  `@types/node`, then regenerates the template's `pnpm-lock.yaml` by baking
+  a project to a scratch directory, running `pnpm install` there, and
+  copying `pnpm-lock.yaml` (and `pnpm-workspace.yaml`) back. Running pnpm in
+  the unrendered template directory would leave `node_modules` behind, and
+  cookiecutter renders every file it finds on the next bake.
 
 - CI has no Python-ADR-001-style version matrix — `build.yml`'s jobs each
   run once, against the one pinned Node version.
