@@ -18,7 +18,7 @@ gh api 'repos/{owner}/{repo}/releases?per_page=100' --jq '[.[] | select((.draft 
 git log <last-tag>..HEAD --oneline
 ```
 
-`<last-tag>` is the first tag printed. The exception is a version without a pre-release segment (`4.0.0`, not `1.0.0-beta.1`) following one or more with: where the two tags differ, it takes the second, so its notes cover the whole pre-release cycle for readers who skipped it. Ask the developer which version they're aiming for if they haven't said. Where the tag you need prints nothing, nothing earlier has shipped: drop `<last-tag>..` from every range below and gather the whole history.
+`<last-tag>` is the first tag printed. The exception is a version without a pre-release segment (`1.0.0`, not `1.0.0-beta.1`) following one or more with: where the two tags differ, it takes the second, so its notes cover the whole pre-release cycle for readers who skipped it. Ask the developer which version they're aiming for if they haven't said. Where the tag you need prints nothing, nothing earlier has shipped: drop `<last-tag>..` from every range below and gather the whole history.
 
 ### 2. Look up PR and issue context
 
