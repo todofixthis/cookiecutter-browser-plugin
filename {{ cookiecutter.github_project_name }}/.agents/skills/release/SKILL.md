@@ -66,7 +66,7 @@ rg 'upgrading_to_v<major>' README.md                # linked from the alert list
 
 Then read the guide and confirm it covers this release's break. No command checks that for you.
 
-**Stop here. Get explicit confirmation of the release notes and version number before continuing.**
+**Stop here. Get explicit confirmation of the release notes and version number before continuing.** Once the version is confirmed, add or drop the `[!CAUTION]` block to match it (see _Writing Release Notes_).
 
 ---
 
@@ -205,6 +205,10 @@ Because `develop` now contains all of `main`'s commits, the histories no longer 
 ```markdown
 # {{ cookiecutter.project_name }} v<version>
 
+> [!CAUTION]
+> **Alpha software — here be dragons**
+> This is an early release. APIs, configuration formats, and CLI flags may change without notice in future versions. Bugs and crashes are possible.
+
 <one-sentence summary of the release character>
 
 > [!WARNING]
@@ -234,7 +238,7 @@ Because `develop` now contains all of `main`'s commits, the histories no longer 
 # SHA256 Checksums
 ```
 
-Only include the `[!WARNING]` block if there are breaking changes — but when it is present, the migration guide link is **required**, not optional. Omit any section that has no entries.
+Lead every pre-release's notes with the `[!CAUTION]` block, verbatim, directly under the title: a pre-release is any `0.y.z` version, or one with a pre-release segment (`1.0.0-beta.1`). Omit it from every other release. Only include the `[!WARNING]` block if there are breaking changes — but when it is present, the migration guide link is **required**, not optional. Omit any section that has no entries.
 
 ### Grouping related items
 
