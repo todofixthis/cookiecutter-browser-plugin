@@ -10,9 +10,15 @@ description: Use when preparing or publishing a new release of {{ cookiecutter.p
 ### 1. Gather changes since last release
 
 ```bash
-gh release list --limit 1 --json tagName --jq '.[0].tagName'   # find last release tag
-git log <last-tag>..HEAD --oneline                              # all commits since
+# Latest release (prints nothing if there is none)
+gh api 'repos/{owner}/{repo}/releases?per_page=100' --jq '[.[] | select(.draft | not)][0].tag_name // empty'
+# Latest release without GitHub's pre-release flag (prints nothing if there is none)
+gh api 'repos/{owner}/{repo}/releases?per_page=100' --jq '[.[] | select((.draft or .prerelease) | not)][0].tag_name // empty'
+# All commits since <last-tag>
+git log <last-tag>..HEAD --oneline
 ```
+
+`<last-tag>` is the first tag printed. The exception is a version without a pre-release segment (`4.0.0`, not `1.0.0-beta.1`) following one or more with: where the two tags differ, it takes the second, so its notes cover the whole pre-release cycle for readers who skipped it. Ask the developer which version they're aiming for if they haven't said. Where the tag you need prints nothing, nothing earlier has shipped: drop `<last-tag>..` from every range below and gather the whole history.
 
 ### 2. Look up PR and issue context
 
@@ -40,6 +46,8 @@ Based on the changes, recommend a semver bump:
 - **major** — breaking changes
 - **minor** — new features or behaviour changes, fully backwards-compatible
 - **patch** — bug fixes only
+
+Where the next version carries a pre-release segment, bump only that segment (`1.0.0-beta.1` → `1.0.0-beta.2`) unless the developer says otherwise.
 
 ### 5. Gate: breaking changes require a migration guide
 
@@ -155,6 +163,8 @@ gh release create <version> .output/*.zip .output/*.sig \
   --title "{{ cookiecutter.project_name }} v<version>" \
   --notes-file release-<version>-body.md
 ```
+
+For a version with a pre-release segment (`1.0.0-beta.1`), add `--prerelease`, so GitHub labels it and leaves `Latest` on the last release without one. A `0.y.z` version without a segment carries the `[!CAUTION]` alert but not this flag.
 
 ### 12. Submit to the stores
 
