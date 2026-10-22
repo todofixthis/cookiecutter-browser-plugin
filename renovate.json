@@ -3,5 +3,9 @@
   "extends": [
     "config:recommended",
     "helpers:pinGitHubActionDigests"
-  ]
+  ],
+  "lockFileMaintenance": {
+    "description": "Refresh uv.lock weekly, so fixes in transitive dependencies reach the harness without direct pins.",
+    "enabled": true
+  }
 }

@@ -1,4 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"]
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "lockFileMaintenance": {
+    "description": "Refresh pnpm-lock.yaml weekly, so fixes in transitive dependencies reach the project without direct pins.",
+    "enabled": true
+  }
 }

@@ -91,3 +91,10 @@ def test_claude_skills_stays_a_symlink(baked_project: Path) -> None:
     claude_skills = baked_project / ".claude" / "skills"
     assert claude_skills.is_symlink()
     assert claude_skills.readlink() == Path("..") / ".agents" / "skills"
+
+
+def test_renovate_maintains_lock_file(baked_project: Path) -> None:
+    """Renovate refreshes pnpm-lock.yaml, so transitive fixes arrive unpinned."""
+    with (baked_project / "renovate.json").open(encoding="utf-8") as f_in:
+        config = json.load(f_in)
+    assert config["lockFileMaintenance"]["enabled"] is True
