@@ -14,6 +14,11 @@ cookiecutter gh:todofixthis/cookiecutter-browser-plugin
 
 You'll be prompted for a project name, a short description, and an author name/email (defaults to Phoenix Zerin's); the current year is filled in automatically.
 
+## After creating the GitHub repo
+
+- **Renovate.** If Renovate is installed for selected repositories only, add the repo at <https://github.com/settings/installations> → Renovate → Configure → Repository access. Until then the repo gets no dependency updates, and nothing says so.
+- **Watching.** Unless the repo already shows as watched, click Watch → All Activity on it. A watch belongs to a person, not the repo, so the todofixthis Terraform module leaves it out by design ([its ADR 005](https://github.com/todofixthis/terraform-github-repository/blob/develop/docs/adr/005-keep-personal-preferences-out-of-the-module.md)).
+
 ## What you get
 
 - `WXT` (Vite-based, cross-browser Manifest V3) + `pnpm` packaging, `vitest` unit tests, `eslint`/`prettier` (via `husky` + `lint-staged`, run in full on every commit — not just staged files)
