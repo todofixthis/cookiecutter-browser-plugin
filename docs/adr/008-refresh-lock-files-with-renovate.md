@@ -1,9 +1,9 @@
 ---
 status: Accepted
 date: 2026-10-22
-scope: [pyproject.toml, renovate.json, "{{ cookiecutter.github_project_name }}/renovate.json"]
-summary: Renovate's lock-file maintenance refreshes pnpm-lock.yaml and this repo's uv.lock weekly and automerges on green, with uv resolving only releases at least 3 days old and pnpm keeping its 1-day default; override a transitive dependency only as a stopgap, with a comment naming when to remove it.
-revisit-when: Lock-refresh PRs repeatedly fail CI or sit unmerged; a regression from a refresh can't be traced to the package that caused it; Renovate gains targeted updates for transitive dependencies in pnpm-lock.yaml or uv.lock.
+scope: [pyproject.toml, renovate.json, "{{ cookiecutter.github_project_name }}/pnpm-workspace.yaml", "{{ cookiecutter.github_project_name }}/renovate.json"]
+summary: Renovate's lock-file maintenance refreshes pnpm-lock.yaml and this repo's uv.lock weekly and automerges on green, with uv and pnpm both resolving only releases at least 3 days old; override a transitive dependency only as a stopgap, with a comment naming when to remove it.
+revisit-when: Lock-refresh PRs repeatedly fail CI or sit unmerged; a pnpm upgrade changes how it treats releases younger than `minimumReleaseAge`; a regression from a refresh can't be traced to the package that caused it; Renovate gains targeted updates for transitive dependencies in pnpm-lock.yaml or uv.lock.
 ---
 
 # 008: Refresh Lock Files with Renovate
@@ -43,7 +43,7 @@ repository, and merges it once every check on it has passed.
 ### Option 3: Override each fix
 
 Raise the floor of each transitive package needing a fix, with `overrides` in
-the generated project's `pnpm-workspace.yaml` (where pnpm 12 keeps its
+the template's `pnpm-workspace.yaml` (where pnpm 12 keeps its
 settings) or `[tool.uv] constraint-dependencies`.
 
 **Pros:** The fix arrives in the PR that adds the override, with no wait, and adds no dependency.
@@ -64,22 +64,24 @@ Automerge, since nobody meaningfully reviews a whole-lock diff and CI is the
 real check.
 
 Renovate's `minimumReleaseAge` can't delay what a refresh picks up: the
-package manager does the resolving, so the delay lives there. pnpm skips
-releases younger than a day by default, and Renovate's lock maintenance
-regenerates `pnpm-lock.yaml` from scratch under that rule. uv has no default,
-so `exclude-newer = "3 days"` in this repo's `pyproject.toml` gives the
-harness the delay cookiecutter-py's projects have. Renovate's
+package manager does the resolving, so the delay lives there, at 3 days for
+both, the delay cookiecutter-py's projects have. pnpm's default is a day, so
+the template's `pnpm-workspace.yaml`, which every generated project inherits,
+sets `minimumReleaseAge: 4320` (minutes), and Renovate's lock maintenance
+should regenerate `pnpm-lock.yaml` from scratch under that rule (untested; see
+Consequences). uv has no default, so `exclude-newer = "3 days"` in
+this repo's `pyproject.toml` sets it for the harness. Renovate's
 `minimumReleaseAge` does gate a direct-update PR that raises a range, so the
 configs extend `security:minimumReleaseAgeNpm`, and the root
-`security:minimumReleaseAgePypi` too, holding those PRs for 3 days; otherwise
-one raising a range to a day-old release would fail to lock under uv's
-cooldown, or lean on pnpm's fallback. The presets exempt in-range lock updates, most of this repo's npm
-PRs, which rest on pnpm's own 1-day check and its fallback below.
+`security:minimumReleaseAgePypi` too, holding those PRs for the same 3 days;
+otherwise one raising a range to a younger release would fail to lock under
+either cooldown. The presets exempt in-range lock updates, most of this repo's
+npm PRs, which rest on pnpm's own check and CI's enforcement of it below.
 
 ## Consequences
 
 - Each repository gets a weekly refresh PR, which merges itself once its checks pass; a red one waits for the maintainer. Renovate merges it on a later run rather than through GitHub's auto-merge, which this repository leaves off.
-- Renovate commits only `pnpm-lock.yaml` from a refresh. Where nothing old enough satisfies a range, pnpm falls back to a younger release and records it in `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`, and that entry is lost. CI's `pnpm install --frozen-lockfile` then fails with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, so the refresh goes red rather than automerging the young release. Only that last step is tested, with pnpm 12.3.4 at its default `minimumReleaseAge` on a hand-edited lock: a frozen install checks every locked release's age, unless `trustLockfile` is set or `minimumReleaseAge` is 0. What Renovate's own pnpm run does is untested.
+- Where nothing old enough satisfies a range, pnpm 12.3.4 run non-interactively fails with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` rather than falling back to a younger release; only an interactive run offers to approve one and record it in `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`. A lock holding a release younger than the cooldown with no such entry fails CI's `pnpm install --frozen-lockfile` with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, since a frozen install checks every locked release's age unless `trustLockfile` is set or `minimumReleaseAge` is 0. Either way a young release can't automerge. Tested with `pnpm add` and hand-edited locks, at both the 1-day default and the template's 3 days. What Renovate's own pnpm run does is untested, including whether it reads the template's `pnpm-workspace.yaml`: if it doesn't, refreshes resolve at the 1-day default and CI rejects any release 1–3 days old, so they go red rather than merge. Expect in-range npm PRs, which the presets don't hold, to fail the same way more often than under the 1-day default.
 - Every lock-maintenance PR carries the presets' note that Renovate can't check release age during a refresh. That's expected: pnpm and uv apply the delay themselves.
 - 006 still decides Renovate; its quoted config gains these settings.
 

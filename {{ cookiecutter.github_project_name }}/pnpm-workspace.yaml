@@ -1,0 +1,4 @@
+# Resolve only releases at least 3 days old (in minutes), so a broken or
+# malicious release is usually unpublished or deprecated before an install
+# picks it up. AGENTS.md says what to do when pnpm rejects a younger one.
+minimumReleaseAge: 4320

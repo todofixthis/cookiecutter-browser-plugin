@@ -106,3 +106,12 @@ def test_renovate_waits_for_releases_to_age(baked_project: Path) -> None:
     with (baked_project / "renovate.json").open(encoding="utf-8") as f_in:
         config = json.load(f_in)
     assert "security:minimumReleaseAgeNpm" in config["extends"]
+
+
+def test_pnpm_waits_for_releases_to_age(baked_project: Path) -> None:
+    """pnpm resolves and installs only releases at least 3 days old."""
+    text = (baked_project / "pnpm-workspace.yaml").read_text(encoding="utf-8")
+    match = re.search(r"^minimumReleaseAge: (\d+)$", text, re.MULTILINE)
+    assert match is not None
+    # pnpm counts minutes
+    assert int(match.group(1)) == 3 * 24 * 60
