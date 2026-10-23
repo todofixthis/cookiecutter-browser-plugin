@@ -67,7 +67,9 @@ Renovate's `minimumReleaseAge` can't delay what a refresh picks up: the
 package manager does the resolving, so the delay lives there, at 3 days for
 both, the delay cookiecutter-py's projects have. pnpm's default is a day, so
 the template's `pnpm-workspace.yaml`, which every generated project inherits,
-sets `minimumReleaseAge: 4320` (minutes), and Renovate's lock maintenance
+sets `minimumReleaseAge: 4320` (minutes) and `minimumReleaseAgeStrict: true`
+(implied once the age is set, but stated so a change to that default can't
+quietly let pnpm install a young release), and Renovate's lock maintenance
 should regenerate `pnpm-lock.yaml` from scratch under that rule (untested; see
 Consequences). uv has no default, so `exclude-newer = "3 days"` in
 this repo's `pyproject.toml` sets it for the harness. Renovate's
@@ -81,7 +83,7 @@ npm PRs, which rest on pnpm's own check and CI's enforcement of it below.
 ## Consequences
 
 - Each repository gets a weekly refresh PR, which merges itself once its checks pass; a red one waits for the maintainer. Renovate merges it on a later run rather than through GitHub's auto-merge, which this repository leaves off.
-- Where nothing old enough satisfies a range, pnpm 12.3.4 run non-interactively fails with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` rather than falling back to a younger release; only an interactive run offers to approve one and record it in `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`. A lock holding a release younger than the cooldown with no such entry fails CI's `pnpm install --frozen-lockfile` with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, since a frozen install checks every locked release's age unless `trustLockfile` is set or `minimumReleaseAge` is 0. Either way a young release can't automerge. Tested with `pnpm add` and hand-edited locks, at both the 1-day default and the template's 3 days. What Renovate's own pnpm run does is untested, including whether it reads the template's `pnpm-workspace.yaml`: if it doesn't, refreshes resolve at the 1-day default and CI rejects any release 1–3 days old, so they go red rather than merge. Expect in-range npm PRs, which the presets don't hold, to fail the same way more often than under the 1-day default.
+- Once `minimumReleaseAge` is set, pnpm 12.3.4 run non-interactively is strict: where nothing old enough satisfies a range it fails with `ERR_PNPM_NO_MATURE_MATCHING_VERSION`, and only an interactive run offers to approve a younger release. A lock holding a release younger than the cooldown with no exclude entry fails CI's `pnpm install --frozen-lockfile` with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, since a frozen install checks every locked release's age unless `trustLockfile` is set or `minimumReleaseAge` is 0. So under strict mode a young release can't automerge. With nothing set, or with `minimumReleaseAgeStrict: false`, pnpm instead installs the younger release and records it in `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`, and a refresh that committed that file would pass CI and automerge it. Tested with `pnpm add` and hand-edited locks, with nothing set, at 1 day and at the template's 3 days. What Renovate's own pnpm run does is untested, including whether it reads the template's `pnpm-workspace.yaml`: if it doesn't, it resolves under pnpm's lax default, CI rejects any locked release under 3 days old that has no exclude entry, and the refresh goes red rather than merging. Expect in-range npm PRs, which the presets don't hold, to fail the same way more often than under the 1-day default.
 - Every lock-maintenance PR carries the presets' note that Renovate can't check release age during a refresh. That's expected: pnpm and uv apply the delay themselves.
 - 006 still decides Renovate; its quoted config gains these settings.
 

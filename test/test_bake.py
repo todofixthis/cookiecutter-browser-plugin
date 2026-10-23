@@ -115,3 +115,4 @@ def test_pnpm_waits_for_releases_to_age(baked_project: Path) -> None:
     assert match is not None
     # pnpm counts minutes
     assert int(match.group(1)) == 3 * 24 * 60
+    assert re.search(r"^minimumReleaseAgeStrict: true$", text, re.MULTILINE)

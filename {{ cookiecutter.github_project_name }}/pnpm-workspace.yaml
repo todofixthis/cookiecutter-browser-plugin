@@ -2,3 +2,8 @@
 # malicious release is usually unpublished or deprecated before an install
 # picks it up. AGENTS.md says what to do when pnpm rejects a younger one.
 minimumReleaseAge: 4320
+# Fail on a younger release rather than install it and record it in
+# minimumReleaseAgeExclude, which a lock refresh committing it would automerge.
+# Setting minimumReleaseAge already implies this; stating it guards against
+# that default changing.
+minimumReleaseAgeStrict: true
