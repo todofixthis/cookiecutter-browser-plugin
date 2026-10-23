@@ -79,7 +79,7 @@ PRs, which rest on pnpm's own 1-day check and its fallback below.
 ## Consequences
 
 - Each repository gets a weekly refresh PR, which merges itself once its checks pass; a red one waits for the maintainer. Renovate merges it on a later run rather than through GitHub's auto-merge, which this repository leaves off.
-- Renovate commits only `pnpm-lock.yaml` from a refresh. Where nothing old enough satisfies a range, pnpm falls back to a younger release and records it in `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`, and that entry is lost. Whether CI's install then fails or passes is untested.
+- Renovate commits only `pnpm-lock.yaml` from a refresh. Where nothing old enough satisfies a range, pnpm falls back to a younger release and records it in `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`, and that entry is lost. CI's `pnpm install --frozen-lockfile` then fails with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, so the refresh goes red rather than automerging the young release. Only that last step is tested, with pnpm 12.3.4 at its default `minimumReleaseAge` on a hand-edited lock: a frozen install checks every locked release's age, unless `trustLockfile` is set or `minimumReleaseAge` is 0. What Renovate's own pnpm run does is untested.
 - Every lock-maintenance PR carries the presets' note that Renovate can't check release age during a refresh. That's expected: pnpm and uv apply the delay themselves.
 - 006 still decides Renovate; its quoted config gains these settings.
 
