@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"]
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    "security:minimumReleaseAgeNpm"
+  ],
+  "lockFileMaintenance": {
+    "automerge": true,
+    "description": "Refresh pnpm-lock.yaml weekly, merging once CI passes, so transitive fixes arrive without direct pins (ADR 008 in todofixthis/cookiecutter-browser-plugin).",
+    "enabled": true
+  }
 }

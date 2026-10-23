@@ -2,6 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended",
-    "helpers:pinGitHubActionDigests"
-  ]
+    "helpers:pinGitHubActionDigests",
+    "security:minimumReleaseAgeNpm",
+    "security:minimumReleaseAgePypi"
+  ],
+  "lockFileMaintenance": {
+    "automerge": true,
+    "description": "Refresh this repo's uv.lock and the template's pnpm-lock.yaml weekly, merging once CI passes, so transitive fixes arrive without direct pins (ADR 008).",
+    "enabled": true
+  }
 }

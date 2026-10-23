@@ -91,3 +91,18 @@ def test_claude_skills_stays_a_symlink(baked_project: Path) -> None:
     claude_skills = baked_project / ".claude" / "skills"
     assert claude_skills.is_symlink()
     assert claude_skills.readlink() == Path("..") / ".agents" / "skills"
+
+
+def test_renovate_maintains_lock_file(baked_project: Path) -> None:
+    """Renovate refreshes pnpm-lock.yaml and merges it once CI passes."""
+    with (baked_project / "renovate.json").open(encoding="utf-8") as f_in:
+        config = json.load(f_in)
+    assert config["lockFileMaintenance"]["enabled"] is True
+    assert config["lockFileMaintenance"]["automerge"] is True
+
+
+def test_renovate_waits_for_releases_to_age(baked_project: Path) -> None:
+    """Renovate raises an npm update only once the release is 3 days old."""
+    with (baked_project / "renovate.json").open(encoding="utf-8") as f_in:
+        config = json.load(f_in)
+    assert "security:minimumReleaseAgeNpm" in config["extends"]
