@@ -25,6 +25,9 @@ ci = [
 # This repo is a cookiecutter template, not a Python package — nothing here
 # gets built or published, so uv shouldn't try to.
 package = false
+# Resolve only releases at least 3 days old, so a broken or malicious release
+# is usually yanked before a lock refresh picks it up (ADR 008).
+exclude-newer = "3 days"
 
 [tool.ruff]
 # The templated project directory has no Python of its own (it's a
