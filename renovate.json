@@ -10,5 +10,12 @@
     "automerge": true,
     "description": "Refresh this repo's uv.lock and the template's pnpm-lock.yaml weekly, merging once CI passes, so transitive fixes arrive without direct pins (ADR 008).",
     "enabled": true
-  }
+  },
+  "packageRules": [
+    {
+      "allowedVersions": "<7.0.0",
+      "description": "Withhold TypeScript 7 until typescript-eslint and typedoc accept it as a peer; both still need the compiler API it dropped (ADR 009).",
+      "matchPackageNames": ["typescript"]
+    }
+  ]
 }
