@@ -71,9 +71,9 @@ The rule targets 7, not typescript-eslint's `<6.1.0` cap, because no 6.1 is
 published or planned. Should one appear, it arrives as its own PR, which
 doesn't automerge; check it against typescript-eslint's and typedoc's peer
 ranges before merging, since typescript-eslint only warns on an unsupported
-version and CI may pass. It lives in the
-root `renovate.json`, which manages the template's `package.json`, and in the
-template's own, which every generated project inherits.
+version and CI may pass. The rule lives in the root `renovate.json`, which
+manages the template's `package.json`, and in the template's own, which every
+generated project inherits.
 
 ## Consequences
 
