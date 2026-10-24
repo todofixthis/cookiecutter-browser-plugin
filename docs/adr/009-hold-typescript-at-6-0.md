@@ -68,7 +68,10 @@ satisfy whole (`~6.0.3` to `~7.0.0`) rather than widening it. Setting
 (`<7.1.0`), and `bump` falls back to `widen` for a multi-comparator range.
 
 The rule targets 7, not typescript-eslint's `<6.1.0` cap, because no 6.1 is
-published or planned and CI would reject one in its own PR. It lives in the
+published or planned. Should one appear, it arrives as its own PR, which
+doesn't automerge; check it against typescript-eslint's and typedoc's peer
+ranges before merging, since typescript-eslint only warns on an unsupported
+version and CI may pass. It lives in the
 root `renovate.json`, which manages the template's `package.json`, and in the
 template's own, which every generated project inherits.
 
@@ -79,6 +82,6 @@ template's own, which every generated project inherits.
 - Lifting the hold means removing the rule from both `renovate.json` files; Renovate then opens the `~7` bump.
 
 [#22]: https://github.com/todofixthis/cookiecutter-browser-plugin/pull/22
-[`range.ts`]: https://github.com/renovatebot/renovate/blob/main/lib/modules/manager/npm/range.ts
+[`range.ts`]: https://github.com/renovatebot/renovate/blob/44.180.0/lib/modules/manager/npm/range.ts
 [typedoc]: https://github.com/TypeStrong/typedoc
 [typescript-eslint]: https://github.com/typescript-eslint/typescript-eslint
