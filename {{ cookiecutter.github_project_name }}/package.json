@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "version": "{{ cookiecutter.version }}",
-  "packageManager": "pnpm@12.17.0",
+  "packageManager": "pnpm@12.18.0",
   "engines": {
     "node": ">={{ cookiecutter.node_version }}"
   },
