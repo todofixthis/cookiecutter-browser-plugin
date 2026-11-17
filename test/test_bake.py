@@ -4,8 +4,10 @@ import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
+import yaml
 from cookiecutter.main import cookiecutter
 
 TEMPLATE_ROOT = Path(__file__).resolve().parent.parent
@@ -116,3 +118,44 @@ def test_pnpm_waits_for_releases_to_age(baked_project: Path) -> None:
     # pnpm counts minutes
     assert int(match.group(1)) == 3 * 24 * 60
     assert re.search(r"^minimumReleaseAgeStrict: true$", text, re.MULTILINE)
+
+
+def load_ci_jobs(project: Path) -> dict[str, dict[str, Any]]:
+    """Parses the baked ``build.yml`` and returns its jobs by name."""
+    workflow = yaml.safe_load(
+        (project / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8")
+    )
+    jobs: dict[str, dict[str, Any]] = workflow["jobs"]
+    return jobs
+
+
+def test_ci_job_names(baked_project: Path) -> None:
+    """CI runs exactly the jobs the template documents."""
+    assert set(load_ci_jobs(baked_project)) == {
+        "build",
+        "docs",
+        "e2e",
+        "gate",
+        "lint",
+        "test",
+        "type-check",
+    }
+
+
+def test_ci_has_gate_needing_every_job(baked_project: Path) -> None:
+    """The ``gate`` job aggregates every other job and fails on a non-success."""
+    jobs = load_ci_jobs(baked_project)
+    gate = jobs["gate"]
+    assert set(gate["needs"]) == set(jobs) - {"gate"}
+    assert gate["if"] == "always()"
+    fail_conditions = [step.get("if", "") for step in gate["steps"]]
+    assert any(
+        all(result in condition for result in ("failure", "cancelled", "skipped"))
+        for condition in fail_conditions
+    )
+
+
+def test_ci_is_one_workflow(baked_project: Path) -> None:
+    """``build.yml`` is the only workflow, so ``gate`` can need every job."""
+    workflows = baked_project / ".github" / "workflows"
+    assert [path.name for path in workflows.iterdir()] == ["build.yml"]
