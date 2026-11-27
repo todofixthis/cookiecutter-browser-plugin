@@ -4,9 +4,7 @@
     {
       "customType": "regex",
       "description": "Track the workflows' annotated env pins, such as the Renovate validator's (ADR 011 in todofixthis/cookiecutter-browser-plugin).",
-      "managerFilePatterns": [
-        "/^\\.github/workflows/[^/]+\\.ya?ml$/"
-      ],
+      "managerFilePatterns": ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z0-9_]+: (?<currentValue>\\S+)"
       ]
@@ -31,19 +29,10 @@
     {
       "automerge": true,
       "description": "Bump the Renovate validator pin's minor and patch releases monthly, merging once CI passes, since Renovate releases several times a day; a major waits for review (ADR 011 in todofixthis/cookiecutter-browser-plugin).",
-      "matchDatasources": [
-        "npm"
-      ],
-      "matchDepNames": [
-        "renovate"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
-      "schedule": [
-        "* 0-3 1 * *"
-      ]
+      "matchDatasources": ["npm"],
+      "matchDepNames": ["renovate"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "schedule": ["* 0-3 1 * *"]
     }
   ]
 }
