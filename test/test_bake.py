@@ -137,6 +137,7 @@ def test_ci_job_names(baked_project: Path) -> None:
         "e2e",
         "gate",
         "lint",
+        "renovate",
         "test",
         "type-check",
     }
@@ -159,3 +160,81 @@ def test_ci_is_one_workflow(baked_project: Path) -> None:
     """``build.yml`` is the only workflow, so ``gate`` can need every job."""
     workflows = baked_project / ".github" / "workflows"
     assert [path.name for path in workflows.iterdir()] == ["build.yml"]
+
+
+RE_VALIDATOR_PIN = re.compile(r"^\s+RENOVATE_VERSION: (\S+)$", re.MULTILINE)
+
+
+def tracked_validator_versions(config: Path, workflow: Path, relative: str) -> set[str]:
+    """Returns the versions ``config``'s regex managers extract for ``renovate``.
+
+    Args:
+        config: The ``renovate.json`` to read.
+        workflow: The workflow file to run its regex managers over.
+        relative: The workflow's path from the config's repository root,
+            which ``managerFilePatterns`` match against.
+    """
+    managers = json.loads(config.read_text(encoding="utf-8"))["customManagers"]
+    text = workflow.read_text(encoding="utf-8")
+    versions = set()
+    for manager in managers:
+        if not any(
+            re.search(pattern.strip("/"), relative)
+            for pattern in manager["managerFilePatterns"]
+        ):
+            continue
+        for match_string in manager["matchStrings"]:
+            # JavaScript names a group (?<name>…), Python (?P<name>…).
+            regex = re.compile(re.sub(r"\(\?<(?=\w)", "(?P<", match_string))
+            for match in regex.finditer(text):
+                groups = match.groupdict()
+                if groups.get("depName") == "renovate":
+                    versions.add(groups["currentValue"])
+    return versions
+
+
+def pinned_validator_version(workflow: Path) -> str:
+    """Returns the one ``RENOVATE_VERSION`` pin in ``workflow``."""
+    versions: list[str] = RE_VALIDATOR_PIN.findall(workflow.read_text(encoding="utf-8"))
+    (version,) = versions
+    return version
+
+
+GENERATE_YML = TEMPLATE_ROOT / ".github" / "workflows" / "generate-and-validate.yml"
+
+TEMPLATE_BUILD_YML = (
+    TEMPLATE_ROOT
+    / "{{ cookiecutter.github_project_name }}"
+    / ".github"
+    / "workflows"
+    / "build.yml"
+)
+
+
+@pytest.mark.parametrize(
+    "workflow",
+    [GENERATE_YML, TEMPLATE_BUILD_YML],
+    ids=["generate-and-validate.yml", "template build.yml"],
+)
+def test_root_renovate_tracks_validator_pin(workflow: Path) -> None:
+    """This repo's renovate.json extracts each workflow's validator pin."""
+    relative = workflow.relative_to(TEMPLATE_ROOT).as_posix()
+    assert tracked_validator_versions(
+        TEMPLATE_ROOT / "renovate.json", workflow, relative
+    ) == {pinned_validator_version(workflow)}
+
+
+def test_renovate_tracks_validator_pin(baked_project: Path) -> None:
+    """A generated project's renovate.json extracts build.yml's validator pin."""
+    relative = ".github/workflows/build.yml"
+    workflow = baked_project / relative
+    assert tracked_validator_versions(
+        baked_project / "renovate.json", workflow, relative
+    ) == {pinned_validator_version(workflow)}
+
+
+def test_validator_pins_agree() -> None:
+    """This repo's CI and the template's run the same validator version."""
+    assert pinned_validator_version(GENERATE_YML) == pinned_validator_version(
+        TEMPLATE_BUILD_YML
+    )

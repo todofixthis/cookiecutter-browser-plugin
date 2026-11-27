@@ -119,12 +119,38 @@ jobs:
       - name: Check docs build
         run: pnpm typedoc
 
+  # Renovate's own validator checks renovate.json at a pin Renovate bumps
+  # (ADR 011 in todofixthis/cookiecutter-browser-plugin). Its Node comes
+  # from .nvmrc, so node_version must stay within the Node versions the
+  # validator's engines field accepts.
+  # With no renovate.json in its working directory the validator passes
+  # having checked nothing, so each step checks the file exists first. Its
+  # npm `deprecated` warnings come from Renovate's own dependencies. Keep
+  # install scripts on: without re2's, Renovate falls back to JavaScript
+  # regexes and accepts patterns the hosted app rejects.
+  renovate:
+    runs-on: ubuntu-latest
+    env:
+      # renovate: datasource=npm depName=renovate
+      RENOVATE_VERSION: 44.257.5
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Validate the Renovate config
+        run: |
+          test -f renovate.json
+          npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict
+
   # The single required status check (ADR 010). Depending on every job here
   # collapses their results into one, so branch protection requires only
   # `gate`. A skipped job fails it, so a job silently skipped cannot pass
   # unnoticed.
   gate:
-    needs: [build, docs, e2e, lint, test, type-check]
+    needs: [build, docs, e2e, lint, renovate, test, type-check]
     if: always()
     runs-on: ubuntu-latest
     steps:
