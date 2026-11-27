@@ -51,7 +51,9 @@ Where the latest release and the next version share a pre-release cycle, bump on
 
 ### 5. Gate: breaking changes require a migration guide
 
-A **breaking change** is anything that makes previously-working code fail — at runtime, or under the type checker. Undocumented behaviour someone relied on still counts; "only a couple of users" measures blast radius, not compatibility. If this release has none, skip to the stop below.
+A **breaking change** is anything that makes previously-working code fail — at runtime, or under the type checker. Undocumented behaviour someone relied on still counts; "only a couple of users" measures blast radius, not compatibility.
+
+A major-version bump of a runtime dependency (`dependencies` or `peerDependencies` in `package.json`; not `devDependencies`) is also a breaking change, whether or not you have found a concrete conflict. We don't audit what else downstream consumers have installed, so the bump alone is the signal. Don't hunt for a specific victim, and don't downgrade it to a non-break because you couldn't find one. If this release has none, skip to the stop below.
 
 **First, settle the version.** Step 4 defines minor and patch as _fully backwards-compatible_, so a breaking change in anything but a major contradicts it. When that happens, stop and put it to the developer: bump to major, or keep the smaller bump and record why in an ADR. Neither pick it for them nor draft around it.
 
@@ -262,14 +264,14 @@ Lead every pre-release's notes with the `[!CAUTION]` block, verbatim, directly u
 - New capabilities developers can use
 - Architectural decisions
 - Behaviour changes
-- Breaking changes
+- Breaking changes, including major-version bumps of runtime dependencies (list under `[!WARNING]` as "{package} {old} → {new}", with the upstream changelog link; the migration instructions and error text may be generic when you haven't found a specific conflict)
 
 **Usually omit**
 
 - Technical details of how something works internally
 - Configuration consolidation (unless it changes developer-facing behaviour)
 - Code organisation changes
-- Dependency updates (include only if resolving a critical or high-severity vulnerability)
+- Dependency updates (include only if resolving a critical or high-severity vulnerability, or if a major-version bump of a runtime dependency — see above)
 - Improvements to coding agent instructions
 
 **Always omit**
