@@ -19,6 +19,12 @@ uv run ruff check hooks test                  # lint
 
 `hooks`/`test` are named explicitly to keep `ruff`/`mypy` scoped to this repo's own Python tooling. Unlike cookiecutter-py, the templated project here has no `pyproject.toml` for a bare `ruff check`/`mypy` to trip over (it ships `package.json` instead), so this scoping is a speed/clarity choice rather than a workaround for a parsing crash — confirm this still holds once the templated tree exists.
 
+Validate this repo's and the template's Renovate configs at the version CI pins (needs a Node version Renovate's `engines` field accepts; npm's `deprecated` warnings on a first run come from Renovate's own dependencies):
+
+```bash
+v=$(awk '/RENOVATE_VERSION:/ {print $2}' .github/workflows/generate-and-validate.yml) && test -n "$v" && timeout 600 npx --yes --package "renovate@$v" -- renovate-config-validator --strict && timeout 600 npx --yes --package "renovate@$v" -- renovate-config-validator --strict --no-global '{{ cookiecutter.github_project_name }}/renovate.json'
+```
+
 **In a worktree:** the shell can silently reset to the main checkout, so always prefix state-mutating commands (`uv add`/`sync`/`run`) with `cd <worktree> &&` to ensure they hit the worktree.
 
 ## Architecture

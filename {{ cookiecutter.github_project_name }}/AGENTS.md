@@ -23,6 +23,12 @@ pnpm typecheck                # tsc --noEmit
 pnpm typedoc                 # build API docs (TypeDoc) into docs/_build/html
 ```
 
+Validate `renovate.json` at the version CI pins (needs a Node version Renovate's `engines` field accepts; npm's `deprecated` warnings on a first run come from Renovate's own dependencies):
+
+```bash
+v=$(awk '/RENOVATE_VERSION:/ {print $2}' .github/workflows/build.yml) && test -n "$v" && timeout 600 npx --yes --package "renovate@$v" -- renovate-config-validator --strict
+```
+
 **In a worktree:** the shell can silently reset to the main checkout, so always prefix state-mutating commands (`pnpm add`/`install`/`run`) with `cd <worktree> &&` to ensure they hit the worktree.
 
 `pnpm-workspace.yaml` sets `minimumReleaseAge` to 3 days (in minutes) and `minimumReleaseAgeStrict`, so pnpm won't resolve or install a release younger than that. Run non-interactively, `pnpm add` of one fails with `ERR_PNPM_NO_MATURE_MATCHING_VERSION`, and `pnpm install` (frozen or not) over a lock holding one fails with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`. When `pnpm add` fails, add an older version or wait; when an install fails, wait until the release is 3 days old, then re-run it. For `@scope/pkg@1.2.3`, `pnpm view @scope/pkg time --json | grep '"1.2.3"'` prints its release date. Don't get past either error by switching the check off (`trustLockfile`, `minimumReleaseAge: 0`) or by listing the release in `minimumReleaseAgeExclude`, except for an urgent fix paired with an `overrides` entry. Remove an exclude entry once its release is over 3 days old, and the key once its list is empty.

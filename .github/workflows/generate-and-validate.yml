@@ -11,8 +11,18 @@ permissions:
   contents: read
 
 jobs:
+  # Also runs Renovate's own validator on this repo's config and the baked
+  # project's, each from the directory holding it (ADR 011).
+  # With no renovate.json in its working directory the validator passes
+  # having checked nothing, so each step checks the file exists first. Its
+  # npm `deprecated` warnings come from Renovate's own dependencies. Keep
+  # install scripts on: without re2's, Renovate falls back to JavaScript
+  # regexes and accepts patterns the hosted app rejects.
   generate:
     runs-on: ubuntu-latest
+    env:
+      # renovate: datasource=npm depName=renovate
+      RENOVATE_VERSION: 44.257.5
 
     steps:
       - name: Clone repo
@@ -35,6 +45,15 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: baked/my-browser-plugin/.nvmrc
+      - name: Validate this repo's Renovate config
+        run: |
+          test -f renovate.json
+          npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict
+      - name: Validate the generated project's Renovate config
+        run: |
+          test -f renovate.json
+          npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict
+        working-directory: baked/my-browser-plugin
       - name: Install the generated project's dependencies
         run: pnpm install --frozen-lockfile
         working-directory: baked/my-browser-plugin

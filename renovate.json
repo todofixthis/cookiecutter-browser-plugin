@@ -1,5 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track the workflows' annotated env pins, such as the Renovate validator's (ADR 011), here and in the template.",
+      "managerFilePatterns": [
+        "/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z0-9_]+: (?<currentValue>\\S+)"
+      ]
+    }
+  ],
   "extends": [
     "config:recommended",
     "helpers:pinGitHubActionDigests",
@@ -16,6 +28,23 @@
       "allowedVersions": "<7.0.0",
       "description": "Withhold TypeScript 7 until typescript-eslint and typedoc accept it as a peer; both still need the compiler API it dropped (ADR 009).",
       "matchPackageNames": ["typescript"]
+    },
+    {
+      "automerge": true,
+      "description": "Bump the Renovate validator pin's minor and patch releases monthly, merging once CI passes, since Renovate releases several times a day; a major waits for review (ADR 011).",
+      "matchDatasources": [
+        "npm"
+      ],
+      "matchDepNames": [
+        "renovate"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "schedule": [
+        "* 0-3 1 * *"
+      ]
     }
   ]
 }
