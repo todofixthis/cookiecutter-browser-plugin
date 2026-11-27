@@ -23,7 +23,7 @@ pnpm typecheck                # tsc --noEmit
 pnpm typedoc                 # build API docs (TypeDoc) into docs/_build/html
 ```
 
-Validate `renovate.json` at the version CI pins (needs Node 24.11 or later; npm's `deprecated` warnings on a first run come from Renovate's own dependencies):
+Validate `renovate.json` at the version CI pins (needs a Node version Renovate's `engines` field accepts; npm's `deprecated` warnings on a first run come from Renovate's own dependencies):
 
 ```bash
 v=$(awk '/RENOVATE_VERSION:/ {print $2}' .github/workflows/build.yml) && test -n "$v" && timeout 600 npx --yes --package "renovate@$v" -- renovate-config-validator --strict

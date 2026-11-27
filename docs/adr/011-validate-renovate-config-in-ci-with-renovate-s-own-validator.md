@@ -48,7 +48,7 @@ pins.
 `--strict` also fails a config that only needs migration.
 **Cons:** The pin fixes only the top-level package: npm resolves its 400-odd dependencies
 afresh within their ranges, outside pnpm's `minimumReleaseAge` (ADR 008), and runs their
-install scripts. Every push of every project downloads about 360 MB from a cold cache.
+install scripts. Every push of every project downloads about 360 MB, since nothing caches it.
 **Risks:** The pin trails the hosted Renovate app, so a config valid for the app could fail
 an older validator, or the reverse. Without `re2`'s install script, Renovate falls back to
 JavaScript regexes and accepts patterns the hosted app rejects. A `node_version` answer below
